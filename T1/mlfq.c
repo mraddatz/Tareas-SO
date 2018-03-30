@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <include/deque.h>
 
 
 struct Process {
@@ -12,21 +13,25 @@ struct Process {
 
 typedef struct Process Proc;
 
-void crear_proceso(char string[], int PID);
+Proc crear_proceso(char string[], int PID);
 
 int str2int(char ch);
 
 int main(int argc, char *argv[]){
     char l[] = "proc_1 3 5 6 3";
-    crear_proceso(l, 5);
+    Proc proceso = crear_proceso(l, 5);
+    
+    printf("%s con bursts %d %d %d y PID %d", proceso.nombre, proceso.bursts[0], 
+    proceso.bursts[1], proceso.bursts[2], proceso.PID);
+    free(proceso.bursts);
     return 0;
 }
 
-void crear_proceso(char string[], int PID){
+Proc crear_proceso(char string[], int PID){
     char *ch;
     int i = 0;
     int N;
-    struct Process proceso;
+    Proc proceso;
     proceso.PID = PID;
 
     ch = strtok(string, " ");
@@ -49,8 +54,7 @@ void crear_proceso(char string[], int PID){
         i++;
     }
 
-    printf("%s con bursts %d %d %d y PID %d", proceso.nombre, proceso.bursts[0], 
-    proceso.bursts[1], proceso.bursts[2], proceso.PID);
+    return proceso;
 };
 
 int str2int(char ch) {
