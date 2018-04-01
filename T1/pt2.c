@@ -1,27 +1,59 @@
 #include <stdio.h>
-#include <stdlib.h> // For exit() function
+#include <string.h>
 
-int main(int argc, char **argv)
-{
 
-    char c[1000];
-    FILE *fptr;
+struct Process {
+    int PID;
+    char nombre[256];
+    char estado[20];
+    int bursts[4];
+};
 
-    if ((fptr = fopen(argv[1], "r")) == NULL)
-    {
-        printf("Error! opening file");
-        // Program exits if file pointer returns NULL.
-        exit(1);         
-    }
+typedef struct Process Proc;
 
-    // reads text until newline 
-    fscanf(fptr,"%[^\n]", c);
+void crear_proceso(char string[], int PID);
 
-    printf("Data from the file:\n%s", c);
-    fscanf(fptr,"%[^\n]", c);
+int str2int(char ch);
 
-    printf("Data from the file:\n%s", c);
-    fclose(fptr);
-    
+int main(int argc, char *argv[]){
+    char l[] = "proc_1 4 5 6 3";
+    crear_proceso(l, 5);
     return 0;
 }
+
+void crear_proceso(char string[], int PID){
+    char *ch;
+    int i;
+    i = 0;
+    int loc;
+
+    Proc proceso;
+    proceso.PID = PID;
+
+    proceso.bursts[0]=3;
+    proceso.bursts[3]=4;
+
+    ch = strtok(string, " ");
+    while (ch != NULL){
+        if (i == 0) strcpy(proceso.nombre, ch);
+        else {
+            //printf("%d\n", str2int(*ch));
+            //printf("%d\n", i);
+            //loc = i-1;
+            proceso.bursts[i-1] = str2int(*ch);
+            printf("%d\n", proceso.bursts[loc]);
+
+        };
+        ch = strtok(NULL, " ");
+        i++;
+    }
+
+    printf("%s con bursts %d %d %d %d y PID %d", proceso.nombre, proceso.bursts[0], 
+    proceso.bursts[1], proceso.bursts[2], proceso.bursts[3], proceso.PID);
+};
+
+int str2int(char ch) {
+    int num = ch - '0';
+    return num;
+}
+
