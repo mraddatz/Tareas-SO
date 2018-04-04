@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-c -Wall -I.
 LDFLAGS= 
-SOURCES=mlfq.c deque.c
+SOURCES=mlfq.c linkedlist.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=t1
 

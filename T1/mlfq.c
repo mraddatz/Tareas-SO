@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <include/deque.h>
+#include <include/linkedlist.h>
 
 
 struct Process {
