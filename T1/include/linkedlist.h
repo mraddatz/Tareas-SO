@@ -2,7 +2,6 @@
 #ifndef LINKEDLIST_H
 #define LINKEDLIST_H
 
-
 /** Estructura de un node de lista ligada */
 struct linked_list_node
 {

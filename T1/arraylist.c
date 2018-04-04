@@ -1,5 +1,5 @@
 // Importo el archivo arraylist.h
-#include "arraylist.h"
+#include <include/arraylist.h>
 // Libreria estandar de C
 #include <stdlib.h>
 
@@ -16,8 +16,8 @@
 /** Crea un nuevo array y retorna su puntero */
 ArrayList* arraylist_realloc(ArrayList* list)
 {
-    int *new_array;
-    new_array = malloc(2 * list->size * sizeof(int));
+    Process* new_array;
+    new_array = malloc(2 * list->size * sizeof(Process));
     for (int i = 0; i < list->size; i++){
         new_array[i] = list->pointer[i];
     }
@@ -33,23 +33,23 @@ ArrayList* arraylist_init()
     ArrayList *list = malloc(sizeof(ArrayList));
     list->size = INITSIZE;  /* Tamaño inicial del array */
     list->count = 0;  /* Comienza con 0 elementos */
-    list->pointer = malloc(INITSIZE * sizeof(int));  /* array de 16 int */
+    list->pointer = malloc(INITSIZE * sizeof(Process));  /* array de 16 int */
 
     return list;
 }
 
 /** Inserta un elemento al final de la arraylist */
-void arraylist_append(ArrayList* list, int element)
+void arraylist_append(ArrayList* list, Process* element)
 {
     if (list->count == list->size){
         list = arraylist_realloc(list);
     }
-    list->pointer[list->count] = element;
+    list->pointer[list->count] = *element;
     list->count += 1;
 }
 
 /** Inserta el elemento dado en la posicion indicada */
-void arraylist_insert(ArrayList* list, int element, int position)
+void arraylist_insert(ArrayList* list, Process* element, int position)
 {
     // al final == list->count
     // cualquier otra hay que mover datos desde pos hast count
@@ -58,7 +58,7 @@ void arraylist_insert(ArrayList* list, int element, int position)
     }
     for (int i = list->count; i >= 0; i--){
         if (i == position){
-            list->pointer[i] = element;  /* lo agrego si estor en posicion */
+            list->pointer[i] = *element;  /* lo agrego si estoy en posicion */
             break;
         }
         else {
@@ -69,9 +69,9 @@ void arraylist_insert(ArrayList* list, int element, int position)
 }
 
 /** Elimina el elemento de la posicion indicada y lo retorna */
-int arraylist_delete(ArrayList* list, int position)
+Process arraylist_delete(ArrayList* list, int position)
 {
-    int aux;
+    Process aux;
     aux = list->pointer[position];
     for (int i = position; i < list->count - 1; i++){
         list->pointer[i] = list->pointer[i+1];  /* reordeno array */
@@ -82,7 +82,7 @@ int arraylist_delete(ArrayList* list, int position)
 }
 
 /** Retorna el valor del elemento en la posicion dada */
-int arraylist_get(ArrayList* list, int position)
+Process arraylist_get(ArrayList* list, int position)
 {
     return list->pointer[position];
 }
