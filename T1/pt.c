@@ -35,14 +35,14 @@ int main(int argc, char **argv){
     fclose(infile);
 
 
-    printf("number of bytes: %ld\n", numbytes);
-    printf("The file  contains this text\n\n%s", buffer);
+    // printf("number of bytes: %ld\n", numbytes);
+    // printf("The file  contains this text\n\n%s", buffer);
 
     //Proceso para separar por lineas (el mismo sirve para separar palabras, cambiar el "\n" por " ")
     char *ch;
     ch = strtok(buffer, "\n");
     while (ch){
-        printf("%s\n", "new line");
+        // printf("%s\n", "new line");
         printf("%s ", ch);
         //Acá, para cada linea haría el proceso
         ch = strtok(NULL, "\n");

@@ -1,8 +1,7 @@
 // Esta linea sirve para que el código de este archivo solo se importe una vez
 #ifndef ARRAYLIST_H
 #define ARRAYLIST_H
-
-#include <include/mlfq.h>
+#include "include/mlfq.h"
 
 
 /** Estructura de una arraylist */
