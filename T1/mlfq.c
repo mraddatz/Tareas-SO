@@ -30,14 +30,13 @@ int main(int argc, char *argv[]){
 }
 
 Process* crear_proceso(char string[], int PID){
-    char *ch;
+    char* ch;
+    char* aux = string;
     int i = 0;
     int N;
     Process* proceso = malloc(sizeof(Process));
     proceso->PID = PID;
-
-    ch = strtok(string, " ");
-    while (ch != NULL){
+    while( (ch = strsep(&aux," ")) != NULL ){
         // Primer elemento es el nombre
         if (i == 0) {
             strcpy(proceso->nombre, ch);
@@ -51,7 +50,6 @@ Process* crear_proceso(char string[], int PID){
             proceso->bursts[i-2] = str2int(*ch);
 
         };
-        ch = strtok(NULL, " ");
         i++;
     }
 
@@ -102,14 +100,10 @@ void* get_procesos(char* buffer){
     char *ch;
     ArrayList* lista = arraylist_init();
     int pid = 1;
-    ch = strtok(buffer, "\n");
-
-    while (ch){
+    while( (ch = strsep(&buffer,"\n")) != NULL ){
         Process* p = crear_proceso(ch, pid);
-        // printf("%s\n", "new line");
         arraylist_append(lista, p);
         //Acá, para cada linea haría el proceso
-        ch = strtok(NULL, "\n");
         pid++;
     }
 
