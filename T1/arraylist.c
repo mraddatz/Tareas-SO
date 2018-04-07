@@ -69,10 +69,10 @@ void arraylist_insert(ArrayList* list, Process* element, int position)
 }
 
 /** Elimina el elemento de la posicion indicada y lo retorna */
-Process arraylist_delete(ArrayList* list, int position)
+Process* arraylist_delete(ArrayList* list, int position)
 {
-    Process aux;
-    aux = list->pointer[position];
+    Process* aux;
+    aux = &(list->pointer[position]);
     for (int i = position; i < list->count - 1; i++){
         list->pointer[i] = list->pointer[i+1];  /* reordeno array */
     }
@@ -82,9 +82,9 @@ Process arraylist_delete(ArrayList* list, int position)
 }
 
 /** Retorna el valor del elemento en la posicion dada */
-Process arraylist_get(ArrayList* list, int position)
+Process* arraylist_get(ArrayList* list, int position)
 {
-    return list->pointer[position];
+    return &(list->pointer[position]);
 }
 
 /** Concatena la segunda arraylist a la primera arraylist */

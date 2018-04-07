@@ -11,6 +11,7 @@
 
 typedef struct {
     int PID;
+    int entry_time;
     char nombre[256];
     char estado[20];
     int *bursts;

@@ -7,17 +7,23 @@ int main(int argc, char *argv[]){
     char* buffer = get_buffer(argv[1]);
     ArrayList* lista = (ArrayList*)get_procesos(buffer);
     int tick = 0;
+    Process* p;
 
-    Process p1 = arraylist_get(lista, 0);
-    Process p2 = arraylist_get(lista, 1);
+    Process* p1 = arraylist_get(lista, 0);
+    Process* p2 = arraylist_get(lista, 1);
 
-    printf("%s con bursts %d %d %d y PID %d\n", p1.nombre, p1.bursts[0], 
-    p1.bursts[1], p1.bursts[2], p1.PID);
-    printf("%s con bursts %d %d %d %d y PID %d\n", p2.nombre, p2.bursts[1], 
-    p2.bursts[1], p2.bursts[2], p2.bursts[3], p2.PID);
-
+    // printf("%s con bursts %d %d %d y PID %d\n", p1.nombre, p1.bursts[0], 
+    // p1.bursts[1], p1.bursts[2], p1.PID);
+    // printf("%s con bursts %d %d %d %d y PID %d\n", p2.nombre, p2.bursts[1], 
+    // p2.bursts[1], p2.bursts[2], p2.bursts[3], p2.PID);
     while (true){
         printf("tick...\n");
+        for (int i=0; i < lista->count; i++){
+            p = arraylist_get(lista, i);
+            if (p->entry_time == tick){
+                printf("%s entra a la cola en T=%d (PID=%d)\n", p->nombre, tick, p->PID);
+            }
+        }
         sleep(1);
         tick++;
         if(tick == 10) break;
@@ -31,7 +37,7 @@ Process* crear_proceso(char string[], int PID){
     char* ch;
     char* aux = string;
     int i = 0;
-    int N;
+    int N, T;
     Process* proceso = malloc(sizeof(Process));
     proceso->PID = PID;
     while( (ch = strsep(&aux," ")) != NULL ){
@@ -39,13 +45,18 @@ Process* crear_proceso(char string[], int PID){
         if (i == 0) {
             strcpy(proceso->nombre, ch);
         }
-        // Segundo elemento es N
+        // Segundo elemento es T
         else if (i == 1) {
+            T = atoi(ch);
+            proceso->entry_time = T;
+        }
+        // Tercer elemento es N
+        else if (i == 2) {
             N = atoi(ch);
             proceso->bursts = malloc(N * sizeof(int));
         }
         else {
-            proceso->bursts[i-2] = atoi(ch);
+            proceso->bursts[i-3] = atoi(ch);
 
         };
         i++;
