@@ -1,14 +1,20 @@
 
-#include "include/mlfq.h"
 #include "include/arraylist.h"
-#include "include/linkedlist.h"
+//#include "include/linkedlist.h"
+#include "include/mlfq.h"
 
 int main(int argc, char *argv[]){
     char* buffer = get_buffer(argv[1]);
+    int queues = atoi(argv[2]);
     // char l[] = "proc_1 3 5 6 3";
     // char l2[] = "proc_2 5 2 2 10 4 5";
     ArrayList* lista = (ArrayList*)get_procesos(buffer);
-
+    LinkedList* queues_list[queues];
+    int i ;
+    for (i=0; i<queues; i++){
+        LinkedList* cola = linkedlist_init();
+        queues_list[i] = cola;    
+    };
     // Process* proceso = crear_proceso(l, 1);
     // Process* proceso2 = crear_proceso(l2, 2);
     
@@ -22,6 +28,16 @@ int main(int argc, char *argv[]){
     p1.bursts[1], p1.bursts[2], p1.PID);
     printf("%s con bursts %d %d %d %d y PID %d\n", p2.nombre, p2.bursts[1], 
     p2.bursts[1], p2.bursts[2], p2.bursts[3], p2.PID);
+
+    //Process p4 = arraylist_get(lista, 3);
+    //printf("%s\n con bursts %d %d y PID", p4.nombre, p4.bursts[]);
+
+    entra_proceso(1, *queues_list);
+
+    printf("%i\n", queues_list[0]->size);
+    printf("%i\n", queues_list[1]->size);
+
+    //printf("%i\n", linkedlist_get(queues_list[0], 0));
 
     // free(proceso);
     // free(proceso2);
@@ -43,11 +59,11 @@ Process* crear_proceso(char string[], int PID){
         }
         // Segundo elemento es N
         else if (i == 1) {
-            N = str2int(*ch);
+            N = atoi(ch);
             proceso->bursts = malloc(N * sizeof(int));
         }
         else {
-            proceso->bursts[i-2] = str2int(*ch);
+            proceso->bursts[i-2] = atoi(ch);
 
         };
         i++;
@@ -56,10 +72,6 @@ Process* crear_proceso(char string[], int PID){
     return proceso;
 };
 
-int str2int(char ch) {
-    int num = ch - '0';
-    return num;
-}
 
 char* get_buffer(char filename[]){
     FILE    *infile;
@@ -110,3 +122,11 @@ void* get_procesos(char* buffer){
     free(buffer);
     return lista;
 }
+
+void entra_proceso(int id, LinkedList* colas){
+    printf("%s\n", "Entro proceso");
+    linkedlist_append(&colas[0], id);
+}
+
+void 
+
