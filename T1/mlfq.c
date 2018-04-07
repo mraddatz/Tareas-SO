@@ -1,12 +1,19 @@
 
-#include "include/mlfq.h"
 #include "include/arraylist.h"
-#include "include/linkedlist.h"
+//#include "include/linkedlist.h"
+#include "include/mlfq.h"
 
 int main(int argc, char *argv[]){
     char* buffer = get_buffer(argv[1]);
     ArrayList* lista = (ArrayList*)get_procesos(buffer);
     int tick = 0;
+    int queues = atoi(argv[2]);
+    LinkedList* queues_list[queues];
+    int i ;
+    for (i=0; i<queues; i++){
+        LinkedList* cola = linkedlist_init();
+        queues_list[i] = cola;    
+    };
 
     Process p1 = arraylist_get(lista, 0);
     Process p2 = arraylist_get(lista, 1);
@@ -23,6 +30,8 @@ int main(int argc, char *argv[]){
         if(tick == 10) break;
     }
 
+
+    entra_proceso(1, *queues_list);
     arraylist_destroy(lista);
     return 0;
 }
@@ -102,4 +111,9 @@ void* get_procesos(char* buffer){
 
     free(buffer);
     return lista;
+}
+
+void entra_proceso(int id, LinkedList* colas){
+    printf("%s\n", "Entro proceso");
+    linkedlist_append(&colas[0], id);
 }
