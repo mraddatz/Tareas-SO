@@ -5,6 +5,8 @@
         "deque.h": "c",
         "linkedlist.h": "c",
         "stdio.h": "c",
-        "arraylist.h": "c"
-    }
+        "arraylist.h": "c",
+        "mlfq.h": "c"
+    },
+    "python.linting.pylintEnabled": false
 }
