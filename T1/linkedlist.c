@@ -18,7 +18,7 @@ LinkedList* linkedlist_init(int q)
     list->size = 0;
     list->root = NULL;
     list->last = NULL;
-    int quantum = q;
+    list->quantum = q;
     return list;
 }
 

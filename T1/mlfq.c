@@ -38,7 +38,7 @@ int main(int argc, char *argv[]){
     //printf("%i\n",arraylist_get(lista, 4)->cola);
     printf("Id Proceso %i\n",proc->PID);
 
-    printf("Elementos cola 0: %d\n", queues_list[0]->size);
+    printf("Elementos cola 0: %i\n", queues_list[0]->size);
     printf("Elementos cola 1: %d\n", queues_list[1]->size);
     return 0;
 }
