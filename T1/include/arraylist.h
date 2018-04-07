@@ -22,8 +22,6 @@ typedef struct arraylist_list ArrayList;
 //                             Funciones                                //
 //////////////////////////////////////////////////////////////////////////
 
-//OJO: No se debe modificar nada de esto
-
 /** Crea una arraylist inicialmente vacia y retorna su puntero */
 ArrayList* arraylist_init();
 

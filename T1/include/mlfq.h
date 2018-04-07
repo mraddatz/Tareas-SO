@@ -14,19 +14,19 @@ typedef struct {
     int entry_time;
     char nombre[256];
     char estado[20];
-    int *bursts;
+    int* bursts;
 } Process;
 
 // Crea y retorna un proceso a partir del string que lo define
 Process* crear_proceso(char string[], int PID);
-
-// Convierte un numero en formato char a int
-int str2int(char ch);
 
 // Retorna el buffer completo del archivo
 char* get_buffer(char filename[]);
 
 // Retorna lista de procesos a partir del buffer del archivo
 void* get_procesos(char* buffer);
+
+// Recorre la lista y ve quienes ya estan listos para entrar a la Queue
+void check_entry_times(void* lista, int tick);
 
 #endif

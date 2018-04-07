@@ -7,23 +7,10 @@ int main(int argc, char *argv[]){
     char* buffer = get_buffer(argv[1]);
     ArrayList* lista = (ArrayList*)get_procesos(buffer);
     int tick = 0;
-    Process* p;
 
-    Process* p1 = arraylist_get(lista, 0);
-    Process* p2 = arraylist_get(lista, 1);
-
-    // printf("%s con bursts %d %d %d y PID %d\n", p1.nombre, p1.bursts[0], 
-    // p1.bursts[1], p1.bursts[2], p1.PID);
-    // printf("%s con bursts %d %d %d %d y PID %d\n", p2.nombre, p2.bursts[1], 
-    // p2.bursts[1], p2.bursts[2], p2.bursts[3], p2.PID);
     while (true){
         printf("tick...\n");
-        for (int i=0; i < lista->count; i++){
-            p = arraylist_get(lista, i);
-            if (p->entry_time == tick){
-                printf("%s entra a la cola en T=%d (PID=%d)\n", p->nombre, tick, p->PID);
-            }
-        }
+        check_entry_times(lista, tick);
         sleep(1);
         tick++;
         if(tick == 10) break;
@@ -33,6 +20,7 @@ int main(int argc, char *argv[]){
     return 0;
 }
 
+// Crea y retorna un proceso a partir del string que lo define
 Process* crear_proceso(char string[], int PID){
     char* ch;
     char* aux = string;
@@ -65,6 +53,7 @@ Process* crear_proceso(char string[], int PID){
     return proceso;
 };
 
+// Retorna el buffer completo del archivo
 char* get_buffer(char filename[]){
     FILE    *infile;
     char    *buffer;
@@ -98,6 +87,7 @@ char* get_buffer(char filename[]){
     // printf("The file  contains this text\n\n%s", buffer);
 }
 
+// Retorna lista de procesos a partir del buffer del archivo
 void* get_procesos(char* buffer){
     //Algoritmo para separar por lineas (el mismo sirve para separar palabras, 
     //cambiar el "\n" por " ")
@@ -107,10 +97,21 @@ void* get_procesos(char* buffer){
     while( (ch = strsep(&buffer,"\n")) != NULL ){
         Process* p = crear_proceso(ch, pid);
         arraylist_append(lista, p);
-        //Acá, para cada linea haría el proceso
         pid++;
     }
 
     free(buffer);
     return lista;
+}
+
+// Mete a la queue a los procesos que les toque entrar
+void check_entry_times(void* lista, int tick) {
+    Process* p;
+
+    for (int i=0; i < ((ArrayList*)lista)->count; i++){
+        p = arraylist_get(lista, i);
+        if (p->entry_time == tick){
+            printf("%s entra a la cola en T=%d (PID=%d)\n", p->nombre, tick, p->PID);
+        }
+    }
 }
