@@ -4,12 +4,14 @@
 #include "include/mlfq.h"
 
 int main(int argc, char *argv[]){
-    char* buffer = get_buffer(argv[1]);
+    char* buffer     = get_buffer(argv[1]);
+    int queues       = atoi(argv[2]);
     ArrayList* lista = (ArrayList*)get_procesos(buffer);
-    int tick = 0;
-    int queues = atoi(argv[2]);
+    int tick         = 0;
+
     LinkedList* queues_list[queues];
-    int i ;
+    int i;
+
     for (i=0; i<queues; i++){
         LinkedList* cola = linkedlist_init();
         queues_list[i] = cola;    
@@ -17,14 +19,20 @@ int main(int argc, char *argv[]){
 
     while (true){
         printf("tick...\n");
-        check_entry_times(lista, tick);
-        sleep(1);
+        check_entry_times(lista, tick, queues_list[0]);
+        // sleep(1);
         tick++;
-        if(tick == 10) break;
+        if (tick == 10) break;
+    }
+    Process* p = linkedlist_get(queues_list[0], 0);
+    char* status = "";
+    p->exec_time = 10;
+    for (int i = 0; i < 15; i++) {
+        decrement_counters(p, &status);
+        printf("Exec time: %d\nPrimer burst: %d\nCodigo: %s\n",
+        p->exec_time, p->bursts[0], status);
     }
 
-
-    entra_proceso(arraylist_get(lista, 4), *queues_list);
     arraylist_destroy(lista);
     return 0;
 }
@@ -50,6 +58,7 @@ Process* crear_proceso(char string[], int PID){
         // Tercer elemento es N
         else if (i == 2) {
             N = atoi(ch);
+            proceso->burst_count = N;
             proceso->bursts = malloc(N * sizeof(int));
         }
         else {
@@ -113,20 +122,41 @@ void* get_procesos(char* buffer){
     return lista;
 }
 
-void entra_proceso(Process* p, void* colas){
-    LinkedList* aux = (LinkedList*)colas;
-    printf("Entro proceso PID = %d\n", p->PID);
-
-    linkedlist_append(&(aux[0]), p);
+// Mete proceso en la queue (LinkedList)
+void entra_proceso(Process* p, void* queue){
+    printf("%s entra a la cola (PID=%d)\n", p->nombre, p->PID);
+    linkedlist_append((LinkedList*)queue, p);
+    
 }
-// Mete a la queue a los procesos que les toque entrar
-void check_entry_times(void* lista, int tick) {
+// Recorre la lista (ArrayList) y ve quienes ya estan listos para entrar a la Queue(LinkedList)
+void check_entry_times(void* lista, int tick, void* queue){
     Process* p;
 
     for (int i=0; i < ((ArrayList*)lista)->count; i++){
         p = arraylist_get(lista, i);
         if (p->entry_time == tick){
-            printf("%s entra a la cola en T=%d (PID=%d)\n", p->nombre, tick, p->PID);
+            entra_proceso(p, queue);
         }
+    }
+}
+
+// Decrementa los contadores de p y revisa si agota un burst o exec_time
+void decrement_counters(Process* p, char** status){
+    for (int i=0; i < p->burst_count; i++) {
+        if (p->bursts[i] != 0) {
+            p->bursts[i]--;
+            if (p->bursts[i] == 0) {
+                *status = "SAME_QUEUE";
+                if (i == p->burst_count - 1) {
+                    *status = "FINISHED";
+                }
+            }
+            break;
+        }
+    }
+    p->exec_time--;
+    if (p->exec_time == 0) {
+            *status = "DECR_QUEUE";
+        return;
     }
 }
