@@ -15,6 +15,8 @@ typedef struct {
     char nombre[256];
     char estado[20];
     int* bursts;
+    int exec_time;
+    int cola;
 } Process;
 
 // Crea y retorna un proceso a partir del string que lo define
@@ -28,6 +30,9 @@ void* get_procesos(char* buffer);
 
 //Mete id de proceso en la cola (LinkedList)
 void entra_proceso(Process* p, void* colas);
+
+//Mete id de proceso en la cola (LinkedList)
+void baja_prioridad(Process* p, void* colas);
 
 // Recorre la lista y ve quienes ya estan listos para entrar a la Queue
 void check_entry_times(void* lista, int tick);

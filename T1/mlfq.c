@@ -10,8 +10,9 @@ int main(int argc, char *argv[]){
     int queues = atoi(argv[2]);
     LinkedList* queues_list[queues];
     int i ;
+    int quantum = atoi(argv[3]);
     for (i=0; i<queues; i++){
-        LinkedList* cola = linkedlist_init();
+        LinkedList* cola = linkedlist_init(quantum);
         queues_list[i] = cola;    
     };
 
@@ -20,12 +21,25 @@ int main(int argc, char *argv[]){
         check_entry_times(lista, tick);
         sleep(1);
         tick++;
-        if(tick == 10) break;
+
+        if(tick == 2) break;
     }
 
-
-    entra_proceso(arraylist_get(lista, 4), *queues_list);
+    Process* proc;
+    proc = arraylist_get(lista, 4);
+    entra_proceso(proc, *queues_list);
     arraylist_destroy(lista);
+    printf("Id Proceso %i\n",proc->PID);
+    printf("Elementos cola 0:%i\n", queues_list[0]->size);
+    printf("Elementos cola 1: %i\n", queues_list[1]->size);
+    //proc = linkedlist_delete(queues_list[0], 0);
+    linkedlist_append(queues_list[1], proc);
+    baja_prioridad(proc,queues_list);
+    //printf("%i\n",arraylist_get(lista, 4)->cola);
+    printf("Id Proceso %i\n",proc->PID);
+
+    printf("Elementos cola 0: %d\n", queues_list[0]->size);
+    printf("Elementos cola 1: %d\n", queues_list[1]->size);
     return 0;
 }
 
@@ -116,7 +130,9 @@ void* get_procesos(char* buffer){
 void entra_proceso(Process* p, void* colas){
     LinkedList* aux = (LinkedList*)colas;
     printf("Entro proceso PID = %d\n", p->PID);
-
+    //Cambiar quentum y cola de proceso
+    p->cola=0;
+    p->exec_time = aux[0].quantum;
     linkedlist_append(&(aux[0]), p);
 }
 // Mete a la queue a los procesos que les toque entrar
@@ -129,4 +145,21 @@ void check_entry_times(void* lista, int tick) {
             printf("%s entra a la cola en T=%d (PID=%d)\n", p->nombre, tick, p->PID);
         }
     }
+}
+
+void baja_prioridad(Process* p, void* colas){
+    LinkedList* aux = (LinkedList*)colas;
+    printf("Bajando de prioridad proceso = %d\n", p->PID);
+    //Cambiar quentum y cola de proceso
+    int cola_actual = p->cola;
+    printf("%i\n", p->cola);
+    p->cola = cola_actual+1;    
+    printf("%i\n", p->cola);
+
+    linkedlist_delete(&(((LinkedList*)colas)[cola_actual]), 0);
+    linkedlist_append(&(aux[cola_actual+1]), p);
+
+    p->exec_time = aux[cola_actual+1].quantum;
+    printf("%i\n", aux[cola_actual].size);
+
 }

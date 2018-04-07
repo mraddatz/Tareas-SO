@@ -19,6 +19,7 @@ struct linked_list
     LinkedListNode *root;
     LinkedListNode *last;
     int size;
+    int quantum;
 };
 
 // Aqui le estoy poniendo un nombre mas simple a la lista para no tener que
@@ -32,7 +33,7 @@ typedef struct linked_list LinkedList;
 //////////////////////////////////////////////////////////////////////////
 
 /** Crea una lista inicialmente vacia y retorna el puntero */
-LinkedList* linkedlist_init();
+LinkedList* linkedlist_init(int q);
 
 /** Inserta un elemento al final de la lista */
 void linkedlist_append(LinkedList* list, Process* element);

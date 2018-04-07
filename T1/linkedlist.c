@@ -12,12 +12,13 @@
 // funcionamiento interno del arreglo dinamico
 
 /** Crea una lista inicialmente vacia y retorna el puntero */
-LinkedList* linkedlist_init()
+LinkedList* linkedlist_init(int q)
 {
     LinkedList *list = malloc(sizeof(LinkedList));
     list->size = 0;
     list->root = NULL;
     list->last = NULL;
+    int quantum = q;
     return list;
 }
 
@@ -74,7 +75,9 @@ Process* linkedlist_delete(LinkedList* list, int position)
         list->root = aux->next;
         p = aux->data;
         free(aux);
-        list->size -= 1;
+        printf("%d\n", list->size);
+        list->size--;
+        printf("%d\n", list->size);
         return p;
     }
     else {
