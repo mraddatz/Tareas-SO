@@ -14,9 +14,9 @@ typedef struct {
     int entry_time;
     char nombre[256];
     char estado[20];
-    int* bursts;
     int exec_time;
     int cola;
+    int* bursts;
 } Process;
 
 // Crea y retorna un proceso a partir del string que lo define

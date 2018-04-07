@@ -9,7 +9,7 @@ int main(int argc, char *argv[]){
     int tick = 0;
     int queues = atoi(argv[2]);
     LinkedList* queues_list[queues];
-    int i ;
+    int i;
     int quantum = atoi(argv[3]);
     for (i=0; i<queues; i++){
         LinkedList* cola = linkedlist_init(quantum);
@@ -30,15 +30,15 @@ int main(int argc, char *argv[]){
     entra_proceso(proc, *queues_list);
     arraylist_destroy(lista);
     printf("Id Proceso %i\n",proc->PID);
-    printf("Elementos cola 0:%i\n", queues_list[0]->size);
-    printf("Elementos cola 1: %i\n", queues_list[1]->size);
+    printf("Elementos cola 0:%d\n", queues_list[0]->size);
+    printf("Elementos cola 1: %d\n", queues_list[1]->size);
     //proc = linkedlist_delete(queues_list[0], 0);
     linkedlist_append(queues_list[1], proc);
-    baja_prioridad(proc,queues_list);
+    baja_prioridad(proc, *queues_list);
     //printf("%i\n",arraylist_get(lista, 4)->cola);
     printf("Id Proceso %i\n",proc->PID);
 
-    printf("Elementos cola 0: %i\n", queues_list[0]->size);
+    printf("Elementos cola 0: %d\n", queues_list[0]->size);
     printf("Elementos cola 1: %d\n", queues_list[1]->size);
     return 0;
 }
@@ -113,7 +113,7 @@ char* get_buffer(char filename[]){
 // Retorna lista de procesos a partir del buffer del archivo
 void* get_procesos(char* buffer){
     //Algoritmo para separar por lineas (el mismo sirve para separar palabras, 
-    //cambiar el "\n" por " ")
+    //cambiar el "\n" pint or " ")
     char *ch;
     ArrayList* lista = arraylist_init();
     int pid = 1;
@@ -152,14 +152,14 @@ void baja_prioridad(Process* p, void* colas){
     printf("Bajando de prioridad proceso = %d\n", p->PID);
     //Cambiar quentum y cola de proceso
     int cola_actual = p->cola;
-    printf("%i\n", p->cola);
-    p->cola = cola_actual+1;    
-    printf("%i\n", p->cola);
-
-    linkedlist_delete(&(((LinkedList*)colas)[cola_actual]), 0);
+    p->cola = cola_actual+1;  
+    
+    linkedlist_delete(&(aux[cola_actual]), 0);
     linkedlist_append(&(aux[cola_actual+1]), p);
 
     p->exec_time = aux[cola_actual+1].quantum;
-    printf("%i\n", aux[cola_actual].size);
+    printf("%d a\n", aux[cola_actual].size);
+    printf("%d b\n", aux[cola_actual+1].size);
+
 
 }
