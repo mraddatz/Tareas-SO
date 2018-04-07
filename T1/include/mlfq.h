@@ -1,7 +1,6 @@
 #ifndef MLFQ_H
 #define MLFQ_H
 
-#include "include/linkedlist.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -27,12 +26,10 @@ char* get_buffer(char filename[]);
 // Retorna lista de procesos a partir del buffer del archivo
 void* get_procesos(char* buffer);
 
-<<<<<<< HEAD
-//Mete id de proceso en la cola
-void entra_proceso(int id, LinkedList* colas);
-=======
+//Mete id de proceso en la cola (LinkedList)
+void entra_proceso(Process* p, void* colas);
+
 // Recorre la lista y ve quienes ya estan listos para entrar a la Queue
 void check_entry_times(void* lista, int tick);
->>>>>>> matias
 
 #endif

@@ -1,6 +1,6 @@
 
 #include "include/arraylist.h"
-//#include "include/linkedlist.h"
+#include "include/linkedlist.h"
 #include "include/mlfq.h"
 
 int main(int argc, char *argv[]){
@@ -24,7 +24,7 @@ int main(int argc, char *argv[]){
     }
 
 
-    entra_proceso(1, *queues_list);
+    entra_proceso(arraylist_get(lista, 4), *queues_list);
     arraylist_destroy(lista);
     return 0;
 }
@@ -113,12 +113,12 @@ void* get_procesos(char* buffer){
     return lista;
 }
 
-<<<<<<< HEAD
-void entra_proceso(int id, LinkedList* colas){
-    printf("%s\n", "Entro proceso");
-    linkedlist_append(&colas[0], id);
+void entra_proceso(Process* p, void* colas){
+    LinkedList* aux = (LinkedList*)colas;
+    printf("Entro proceso PID = %d\n", p->PID);
+
+    linkedlist_append(&(aux[0]), p);
 }
-=======
 // Mete a la queue a los procesos que les toque entrar
 void check_entry_times(void* lista, int tick) {
     Process* p;
@@ -130,4 +130,3 @@ void check_entry_times(void* lista, int tick) {
         }
     }
 }
->>>>>>> matias

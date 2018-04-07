@@ -1,6 +1,7 @@
 // Esta linea sirve para que el codigo de este archivo solo se importe una vez
 #ifndef LINKEDLIST_H
 #define LINKEDLIST_H
+
 #include "include/mlfq.h"
 
 /** Estructura de un node de lista ligada */
