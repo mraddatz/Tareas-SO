@@ -20,9 +20,8 @@ int main(int argc, char *argv[]){
 
     printf("%s con bursts %d %d %d y PID %d\n", p1.nombre, p1.bursts[0], 
     p1.bursts[1], p1.bursts[2], p1.PID);
-    printf("%s con bursts %d %d %d %d %d y PID %d\n", p2.nombre, p2.bursts[0], 
-    p2.bursts[1], p2.bursts[2], p2.bursts[3], p2.bursts[4],
-    p2.PID);
+    printf("%s con bursts %d %d %d %d y PID %d\n", p2.nombre, p2.bursts[1], 
+    p2.bursts[1], p2.bursts[2], p2.bursts[3], p2.PID);
 
     // free(proceso);
     // free(proceso2);
@@ -72,7 +71,7 @@ char* get_buffer(char filename[]){
     infile = fopen(filename, "r");
     if(infile == NULL)
     {
-        return 1;
+        return "Error";
     }
     //Lee numero de bytes del archivo
     fseek(infile, 0L, SEEK_END);
@@ -86,7 +85,7 @@ char* get_buffer(char filename[]){
 
     //controlamos memory error
     if(buffer == NULL)
-    return 1;
+    return "Error";
 
     //Copiamos el texto al buffer
     fread(buffer, sizeof(char), numbytes, infile);
