@@ -13,7 +13,7 @@ int main(int argc, char *argv[]){
     int quantum = atoi(argv[3]);
     for (i=0; i<queues; i++){
         LinkedList* cola = linkedlist_init(quantum);
-        queues_list[i] = cola;    
+        queues_list[i] = cola;
     };
 
     while (true){
@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
         check_entry_times(lista, tick);
         sleep(1);
         tick++;
-
+        printf("%i\n", lista->size);
         if(tick == 2) break;
     }
 
@@ -29,17 +29,10 @@ int main(int argc, char *argv[]){
     proc = arraylist_get(lista, 4);
     entra_proceso(proc, *queues_list);
     arraylist_destroy(lista);
-    printf("Id Proceso %i\n",proc->PID);
-    printf("Elementos cola 0:%i\n", queues_list[0]->size);
-    printf("Elementos cola 1: %i\n", queues_list[1]->size);
-    //proc = linkedlist_delete(queues_list[0], 0);
     linkedlist_append(queues_list[1], proc);
-    baja_prioridad(proc,queues_list);
-    //printf("%i\n",arraylist_get(lista, 4)->cola);
+    baja_prioridad(proc,*queues_list);
     printf("Id Proceso %i\n",proc->PID);
 
-    printf("Elementos cola 0: %i\n", queues_list[0]->size);
-    printf("Elementos cola 1: %d\n", queues_list[1]->size);
     return 0;
 }
 
@@ -112,7 +105,7 @@ char* get_buffer(char filename[]){
 
 // Retorna lista de procesos a partir del buffer del archivo
 void* get_procesos(char* buffer){
-    //Algoritmo para separar por lineas (el mismo sirve para separar palabras, 
+    //Algoritmo para separar por lineas (el mismo sirve para separar palabras,
     //cambiar el "\n" por " ")
     char *ch;
     ArrayList* lista = arraylist_init();
@@ -149,17 +142,12 @@ void check_entry_times(void* lista, int tick) {
 
 void baja_prioridad(Process* p, void* colas){
     LinkedList* aux = (LinkedList*)colas;
-    printf("Bajando de prioridad proceso = %d\n", p->PID);
     //Cambiar quentum y cola de proceso
     int cola_actual = p->cola;
-    printf("%i\n", p->cola);
-    p->cola = cola_actual+1;    
-    printf("%i\n", p->cola);
-
+    p->cola = cola_actual+1;
     linkedlist_delete(&(((LinkedList*)colas)[cola_actual]), 0);
     linkedlist_append(&(aux[cola_actual+1]), p);
-
     p->exec_time = aux[cola_actual+1].quantum;
-    printf("%i\n", aux[cola_actual].size);
+
 
 }
