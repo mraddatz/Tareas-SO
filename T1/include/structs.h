@@ -6,7 +6,6 @@ typedef struct {
     int PID;
     int entry_time;
     char nombre[256];
-    char estado[20];
     int exec_time;
     int cola;
     int burst_count;
@@ -27,7 +26,7 @@ typedef struct linked_list_node {
 } LinkedListNode;
 
 
-// LnkedList
+// LinkedList
 typedef struct {
     LinkedListNode *root;
     LinkedListNode *last;
@@ -37,11 +36,13 @@ typedef struct {
 
 // MLFQ
 typedef struct {
-    ArrayList* processes;
+    ArrayList* procs;
+    ArrayList* finished_procs;
     LinkedList* queues;
     Process* executing_proc;
-    int num_queues;
-    int timer;
+    unsigned int num_queues;
+    unsigned int num_procs;
+    unsigned int timer;
 } MLFQ;
 
 #endif

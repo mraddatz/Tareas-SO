@@ -3,11 +3,13 @@
 #include "include/linkedlist.h"
 #include "include/mlfq.h"
 
+
 int main(int argc, char *argv[]){
     char* version = argv[1];
     char* buffer  = get_buffer(argv[2]);
     int quantum   = atoi(argv[3]);
     int queues    = atoi(argv[4]);
+    int terminados = 0;
 
     int queue_signal;
     MLFQ* mlfq         = mlfq_init(buffer, quantum, queues);
@@ -15,23 +17,37 @@ int main(int argc, char *argv[]){
     if (strcmp(version, "v1") == 0){
       printf("Ejecutando version1\n");
       while (true){
-        printf("tick...\n");
+        printf("tick %d...\n", mlfq->timer);
+        printf("Finished: %d\n", mlfq->finished_procs->count);
         check_entry_times(mlfq);
-        if (mlfq->executing_proc == NULL) seleccionar_proceso(mlfq);
-        decrement_counters(mlfq->executing_proc, &queue_signal);
+        if (mlfq->executing_proc == NULL) {
+            printf("No encontro procesos..");
+            break;
+        }
+
+        decrement_counters(mlfq, &queue_signal);
         switch (queue_signal) {
             case FIN_SIGNAL :
+                finish_process(mlfq);
+                terminados++;
+                if (mlfq->finished_procs->count == mlfq->procs->count) {
+                    printf("COMPLETED\n\n\n");
+                    return 0;
+                }
+                queue_signal = 0;
                 break;
             case DOWN_QUEUE :
                 update_queue(mlfq, true);
                 queue_signal = 0;
+                break;
             case SAME_QUEUE :
                 update_queue(mlfq, false); 
-                queue_signal = 0;     
+                queue_signal = 0; 
+                break;    
         }
-        sleep(1);
+        // sleep(1);
         mlfq->timer++;
-        if (mlfq->timer == 10) break;
+        if (mlfq->timer == 10000) break;
       }
     }
     // else if (strcmp(version, "v2") == 0){
@@ -46,20 +62,21 @@ int main(int argc, char *argv[]){
     //}
 
     // Process* proc;
-    // proc = arraylist_get(mlfq->processes, 4);
+    // proc = arraylist_get(mlfq->procs, 4);
     // entra_proceso(proc, mlfq->queues, 0, false);
-    // arraylist_destroy(mlfq->processes);
+    // arraylist_destroy(mlfq->procs);
     // linkedlist_append(&(mlfq->queues[1]), proc);
     // baja_prioridad(proc,mlfq->queues);
     // printf("Id Proceso %i\n",proc->PID);
 
-    return 0;
+    return 1;
 }
 
 // Inicializa y retorna la estructura mlfq a partir de los parametros
 MLFQ* mlfq_init(char* buffer, int quantum, int queues) {
     MLFQ* mlfq = malloc(sizeof(MLFQ));
-    mlfq->processes = get_procesos(buffer);
+    mlfq->procs = get_procesos(buffer);
+    mlfq->finished_procs = arraylist_init();
     mlfq->queues = malloc(queues * sizeof(LinkedList));
 
     for (int i = 0; i < queues; i++){
@@ -158,11 +175,12 @@ ArrayList* get_procesos(char* buffer){
 }
 
 // Mete proceso a la queue num
-void entra_proceso(Process* p, LinkedList* queues, int num, bool set_time){
+void entra_proceso(Process* p, MLFQ* mlfq, int num, bool set_time){
     //Cambiar quentum y cola de proceso
     p->cola = num;
-    linkedlist_append(&(queues[num]), p);
-    if (set_time == true) p->exec_time = queues[num].quantum;
+    linkedlist_append(&(mlfq->queues[num]), p);
+    if (set_time == true) p->exec_time = mlfq->queues[num].quantum;
+    seleccionar_proceso(mlfq); // En caso de p tenga mejor prioridad que exec_proc
 }
 
 //Selecciona proceso a ejecutar
@@ -173,6 +191,7 @@ void seleccionar_proceso(MLFQ* mlfq){
             return;
         }
     }
+    // No encontro ninguno
     mlfq->executing_proc = NULL;
 }
 
@@ -180,10 +199,10 @@ void seleccionar_proceso(MLFQ* mlfq){
 void check_entry_times(MLFQ* mlfq) {
     Process* p;
 
-    for (int i=0; i < mlfq->processes->count; i++){
-        p = arraylist_get(mlfq->processes, i);
+    for (int i=0; i < mlfq->procs->count; i++){
+        p = arraylist_get(mlfq->procs, i);
         if (p->entry_time == mlfq->timer){
-            entra_proceso(p, mlfq->queues, 0, true);
+            entra_proceso(p, mlfq, 0, true);
         }
     }
 }
@@ -208,15 +227,19 @@ void getAllButFirstAndLast(const char *input, char *output) {
 }
 
 // Decrementa los contadores de p y revisa si agota un burst o exec_time
-void decrement_counters(Process* p, int* status){
+void decrement_counters(MLFQ* mlfq, int* status){
+    Process* p = mlfq->executing_proc;
     p->exec_time--;
-    for (int i=0; i < p->burst_count; i++) {
+    int aux;
+    for (int i = 0; i < p->burst_count; i++) {
+        aux = i;
         if (p->bursts[i] != 0) {
             p->bursts[i]--;
             if (p->bursts[i] == 0) {
                 *status = SAME_QUEUE;
                 if (i == p->burst_count - 1) {
                     *status = FIN_SIGNAL;
+                    return;
                 }
             }
             break;
@@ -227,8 +250,9 @@ void decrement_counters(Process* p, int* status){
         *status = DOWN_QUEUE;
     }
 
-    printf("PID: %d\nExec time: %d\nPrimer burst: %d\nCodigo: %d\n",
-    p->PID, p->exec_time, p->bursts[0], *status);
+    printf("\n");
+    printf("PID: %d\nExec time: %d\nBurst: %d\nBurst count: %d\nCodigo: %d\n\n",
+    p->PID, p->exec_time, p->bursts[aux], p->burst_count, *status);
     return;
     
 }
@@ -239,12 +263,21 @@ void update_queue(MLFQ* mlfq, bool downgrade) {
     // Sacar al exec_proc de la cola en que esta
     Process* p = linkedlist_delete(&(mlfq->queues[index]), 0);
     if (downgrade == true) {
-        if (index != mlfq->num_queues) {
+        if (index != mlfq->num_queues - 1) {
             // Caso en que no esta en la ultima cola, baja.
             // Si no, hace RR
             index++;
         }
     }
-    entra_proceso(p, mlfq->queues, index, downgrade);
+    entra_proceso(p, mlfq, index, downgrade);
+}
+
+// Saca a exec_proc de las colas y lo mete a la lista finished
+void finish_process(MLFQ* mlfq) {
+    printf("Termino uno\n\n");
+    int index = mlfq->executing_proc->cola;
+    Process* p = linkedlist_delete(&(mlfq->queues[index]), 0);
+    arraylist_append(mlfq->finished_procs, p);
+    printf("Queue: %d con %d procs\nFinished: %d\n", p->cola, mlfq->queues[index].size, mlfq->finished_procs->count);
     seleccionar_proceso(mlfq);
 }
