@@ -40,6 +40,7 @@ int main(int argc, char *argv[]){
 
     printf("Elementos cola 0: %d\n", queues_list[0]->size);
     printf("Elementos cola 1: %d\n", queues_list[1]->size);
+    printf("En la segunda queue esta %s", linkedlist_get(queues_list[1], 0)->nombre);
     return 0;
 }
 
@@ -127,19 +128,18 @@ void* get_procesos(char* buffer){
     return lista;
 }
 
-void entra_proceso(Process* p, void* colas){
-    LinkedList* aux = (LinkedList*)colas;
+void entra_proceso(Process* p, LinkedList* colas){
     printf("Entro proceso PID = %d\n", p->PID);
     //Cambiar quentum y cola de proceso
     p->cola=0;
-    p->exec_time = aux[0].quantum;
-    linkedlist_append(&(aux[0]), p);
+    p->exec_time = colas[0].quantum;
+    linkedlist_append(&(colas[0]), p);
 }
 // Mete a la queue a los procesos que les toque entrar
-void check_entry_times(void* lista, int tick) {
+void check_entry_times(ArrayList* lista, int tick) {
     Process* p;
 
-    for (int i=0; i < ((ArrayList*)lista)->count; i++){
+    for (int i=0; i < lista->count; i++){
         p = arraylist_get(lista, i);
         if (p->entry_time == tick){
             printf("%s entra a la cola en T=%d (PID=%d)\n", p->nombre, tick, p->PID);
@@ -147,19 +147,18 @@ void check_entry_times(void* lista, int tick) {
     }
 }
 
-void baja_prioridad(Process* p, void* colas){
-    LinkedList* aux = (LinkedList*)colas;
+void baja_prioridad(Process* p, LinkedList* colas){
     printf("Bajando de prioridad proceso = %d\n", p->PID);
     //Cambiar quentum y cola de proceso
     int cola_actual = p->cola;
     p->cola = cola_actual+1;  
     
-    linkedlist_delete(&(aux[cola_actual]), 0);
-    linkedlist_append(&(aux[cola_actual+1]), p);
+    linkedlist_delete(&(colas[cola_actual]), 0);
+    linkedlist_append(&(colas[cola_actual+1]), p);
 
-    p->exec_time = aux[cola_actual+1].quantum;
-    printf("%d a\n", aux[cola_actual].size);
-    printf("%d b\n", aux[cola_actual+1].size);
+    p->exec_time = colas[cola_actual+1].quantum;
+    printf("%d a\n", colas[cola_actual].size);
+    printf("%d b\n", colas[cola_actual+1].size);
 
 
 }

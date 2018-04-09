@@ -8,16 +8,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <errno.h>
-
-typedef struct {
-    int PID;
-    int entry_time;
-    char nombre[256];
-    char estado[20];
-    int exec_time;
-    int cola;
-    int* bursts;
-} Process;
+#include "include/structs.h"
 
 // Crea y retorna un proceso a partir del string que lo define
 Process* crear_proceso(char string[], int PID);
@@ -29,12 +20,12 @@ char* get_buffer(char filename[]);
 void* get_procesos(char* buffer);
 
 //Mete id de proceso en la cola (LinkedList)
-void entra_proceso(Process* p, void* colas);
+void entra_proceso(Process* p, LinkedList* colas);
 
 //Mete id de proceso en la cola (LinkedList)
-void baja_prioridad(Process* p, void* colas);
+void baja_prioridad(Process* p, LinkedList* colas);
 
 // Recorre la lista y ve quienes ya estan listos para entrar a la Queue
-void check_entry_times(void* lista, int tick);
+void check_entry_times(ArrayList* lista, int tick);
 
 #endif

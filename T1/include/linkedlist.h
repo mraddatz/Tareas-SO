@@ -2,25 +2,7 @@
 #ifndef LINKEDLIST_H
 #define LINKEDLIST_H
 
-#include "include/mlfq.h"
-
-/** Estructura de un node de lista ligada */
-struct linked_list_node
-{
-    Process* data;
-    struct linked_list_node *next;
-};
-
-typedef struct linked_list_node LinkedListNode;
-
-/** Estructura de una lista ligada */
-struct linked_list
-{
-    LinkedListNode *root;
-    LinkedListNode *last;
-    int size;
-    int quantum;
-};
+#include "include/structs.h"
 
 // Aqui le estoy poniendo un nombre mas simple a la lista para no tener que
 // referirme a la lista como struct linked_list

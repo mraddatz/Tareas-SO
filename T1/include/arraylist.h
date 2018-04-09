@@ -2,16 +2,7 @@
 #ifndef ARRAYLIST_H
 #define ARRAYLIST_H
 
-#include "include/mlfq.h"
-
-
-/** Estructura de una arraylist */
-struct arraylist_list
-{
-    int count;
-    int size;
-    Process* pointer;
-};
+#include "include/structs.h"
 
 // Aquí le estoy poniendo un nombre más simple a la lista para no tener que
 // referirme a la lista como struct arraylist_list
