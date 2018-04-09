@@ -106,7 +106,6 @@ int main(int argc, char *argv[]){
      }
     else if (strcmp(version, "v2") == 0){
       printf("Ejecutando version3\n");
-      if (!argv[5]){
         if (!argv[5]){
             printf("Falta argumento para el S\n");
             return 1;
@@ -160,8 +159,7 @@ int main(int argc, char *argv[]){
       }
         }
 
-
-    }
+    
 
     // Process* proc;
     // proc = arraylist_get(mlfq->procs, 4);
@@ -232,6 +230,9 @@ Process* crear_proceso(char string[], int PID){
     return proceso;
 };
 
+//Process* seleccionar_proceso(){
+
+//}
 // Retorna el buffer completo del archivo
 char* get_buffer(char filename[]){
     FILE    *infile;
@@ -337,13 +338,6 @@ void baja_prioridad(Process* p, LinkedList* colas){
     p->exec_time = colas[cola_actual+1].quantum;
 }
 
-void getAllButFirstAndLast(const char *input, char *output) {
-  int len = strlen(input);
-  if(len > 0)
-    strcpy(output, ++input);
-  if(len > 1)
-    output[len - 2] = '\0';
-}
 
 // Decrementa los contadores de p y revisa si agota un burst o exec_time
 void decrement_counters(MLFQ* mlfq, int* status){
@@ -484,3 +478,4 @@ void ajustar_quantum_v3(MLFQ* mlfq){
 
     return;
 }
+
