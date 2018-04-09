@@ -2,4 +2,4 @@ T1/t1
 T1/T1.pdf
 *.o
 .vscode
-obj/
+T1/obj/

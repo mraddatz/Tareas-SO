@@ -1,6 +1,7 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
+// Process
 typedef struct {
     int PID;
     int entry_time;
@@ -12,30 +13,34 @@ typedef struct {
     int burst_count;
 } Process;
 
-/** Estructura de una arraylist */
-struct arraylist_list
-{
+// ArrayList
+typedef struct {
     int count;
     int size;
     Process* pointer;
-};
+} ArrayList;
 
-/** Estructura de un node de lista ligada */
-struct linked_list_node
-{
+// LinkedListNode
+typedef struct linked_list_node {
     Process* data;
     struct linked_list_node *next;
-};
+} LinkedListNode;
 
-typedef struct linked_list_node LinkedListNode;
 
-/** Estructura de una lista ligada */
-struct linked_list
-{
+// LnkedList
+typedef struct {
     LinkedListNode *root;
     LinkedListNode *last;
     int size;
     int quantum;
-};
+} LinkedList;
+
+// MLFQ
+typedef struct {
+    ArrayList* processes;
+    LinkedList* queues;
+    Process* executing_proc;
+    int timer;
+} MLFQ;
 
 #endif

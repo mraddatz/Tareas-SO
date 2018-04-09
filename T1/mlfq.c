@@ -5,17 +5,11 @@
 
 int main(int argc, char *argv[]){
     char* version = argv[1];
-    char* buffer = get_buffer(argv[2]);
-    ArrayList* lista = (ArrayList*)get_procesos(buffer);
-    int tick = 0;
-    int queues = atoi(argv[4]);
-    LinkedList* queues_list[queues];
-    int i ;
-    int quantum = atoi(argv[3]);
-    for (i=0; i<queues; i++){
-        LinkedList* cola = linkedlist_init(quantum);
-        queues_list[i] = cola;
-    };
+    char* buffer  = get_buffer(argv[2]);
+    int quantum   = atoi(argv[3]);
+    int queues    = atoi(argv[4]);
+
+    MLFQ* mlfq = mlfq_init(buffer, quantum, queues);
 
     printf("%s\n", version);
 
@@ -23,27 +17,24 @@ int main(int argc, char *argv[]){
       printf("Ejecutando version1\n");
       while (true){
           printf("tick...\n");
-          check_entry_times(lista, tick, queues_list[0]);
+          check_entry_times(mlfq);
           sleep(1);
-          tick++;
-          printf("%i\n", lista->size);
-          if(tick == 2) break;
+          mlfq->timer++;
+          if(mlfq->timer == 2) break;
       }
     }
-    else if (strcmp(version, "v2") == 0){
-      char* s = argv[5];
-      char mod[512];
-      getAllButFirstAndLast(s, mod);
-      int s_integer = atoi(mod);
-
-
-    }
+    // else if (strcmp(version, "v2") == 0){
+    //   char* s = argv[5];
+    //   char mod[512];
+    //   getAllButFirstAndLast(s, mod);
+    //   int s_integer = atoi(mod);
+    // }
     //else if (version=='v3'){
     //  printf("Ejecutando version3\n");
 
     //}
 
-    Process* p = linkedlist_get(queues_list[0], 0);
+    Process* p = linkedlist_get(&(mlfq->queues[0]), 0);
     char* status = "";
     p->exec_time = 10;
     for (int i = 0; i < 15; i++) {
@@ -53,16 +44,30 @@ int main(int argc, char *argv[]){
     }
 
     Process* proc;
-    proc = arraylist_get(lista, 4);
-    entra_proceso(proc, *queues_list);
-    arraylist_destroy(lista);
-    linkedlist_append(queues_list[1], proc);
-    baja_prioridad(proc,*queues_list);
+    proc = arraylist_get(mlfq->processes, 4);
+    entra_proceso(proc, mlfq->queues);
+    arraylist_destroy(mlfq->processes);
+    linkedlist_append(&(mlfq->queues[1]), proc);
+    baja_prioridad(proc,mlfq->queues);
     printf("Id Proceso %i\n",proc->PID);
 
     return 0;
 }
 
+// Inicializa y retorna la estructura mlfq a partir de los parametros
+MLFQ* mlfq_init(char* buffer, int quantum, int queues) {
+    MLFQ* mlfq = malloc(sizeof(MLFQ));
+    mlfq->processes = get_procesos(buffer);
+    mlfq->queues = malloc(queues * sizeof(LinkedList));
+
+    for (int i = 0; i < queues; i++){
+        mlfq->queues[i] = *(linkedlist_init(quantum));
+    };
+    
+    mlfq->timer = 0;
+
+    return mlfq;
+}
 
 // Crea y retorna un proceso a partir del string que lo define
 Process* crear_proceso(char string[], int PID){
@@ -132,7 +137,7 @@ char* get_buffer(char filename[]){
 }
 
 // Retorna lista de procesos a partir del buffer del archivo
-void* get_procesos(char* buffer){
+ArrayList* get_procesos(char* buffer){
     //Algoritmo para separar por lineas (el mismo sirve para separar palabras,
     //cambiar el "\n" por " ")
     char *ch;
@@ -157,13 +162,13 @@ void entra_proceso(Process* p, LinkedList* colas){
 }
 
 // Mete a la queue a los procesos que les toque entrar
-void check_entry_times(ArrayList* lista, int tick, LinkedList* queue) {
+void check_entry_times(MLFQ* mlfq) {
     Process* p;
 
-    for (int i=0; i < lista->count; i++){
-        p = arraylist_get(lista, i);
-        if (p->entry_time == tick){
-            entra_proceso(p, queue);
+    for (int i=0; i < mlfq->processes->count; i++){
+        p = arraylist_get(mlfq->processes, i);
+        if (p->entry_time == mlfq->timer){
+            entra_proceso(p, &(mlfq->queues[0]));
         }
     }
 }
@@ -179,8 +184,7 @@ void baja_prioridad(Process* p, LinkedList* colas){
     p->exec_time = colas[cola_actual+1].quantum;
 }
 
-void getAllButFirstAndLast(const char *input, char *output)
-{
+void getAllButFirstAndLast(const char *input, char *output) {
   int len = strlen(input);
   if(len > 0)
     strcpy(output, ++input);
@@ -194,9 +198,9 @@ void decrement_counters(Process* p, char** status){
         if (p->bursts[i] != 0) {
             p->bursts[i]--;
             if (p->bursts[i] == 0) {
-                *status = "SAME_QUEUE";
+                *status = SAME_QUEUE;
                 if (i == p->burst_count - 1) {
-                    *status = "FINISHED";
+                    *status = FIN_SIGNAL;
                 }
             }
             break;
@@ -204,7 +208,7 @@ void decrement_counters(Process* p, char** status){
     }
     p->exec_time--;
     if (p->exec_time == 0) {
-            *status = "DECR_QUEUE";
+            *status = DECR_QUEUE;
         return;
     }
 }

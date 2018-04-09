@@ -4,12 +4,6 @@
 
 #include "include/structs.h"
 
-// Aquí le estoy poniendo un nombre más simple a la lista para no tener que
-// referirme a la lista como struct arraylist_list
-/** Estructura de una arraylist */
-typedef struct arraylist_list ArrayList;
-
-
 //////////////////////////////////////////////////////////////////////////
 //                             Funciones                                //
 //////////////////////////////////////////////////////////////////////////

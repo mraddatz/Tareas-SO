@@ -4,11 +4,6 @@
 
 #include "include/structs.h"
 
-// Aqui le estoy poniendo un nombre mas simple a la lista para no tener que
-// referirme a la lista como struct linked_list
-/** Estructura de una lista ligada */
-typedef struct linked_list LinkedList;
-
 
 //////////////////////////////////////////////////////////////////////////
 //                             Funciones                                //
