@@ -31,14 +31,10 @@ int main(int argc, char *argv[]){
       }
     }
     else if (strcmp(version, "v2") == 0){
-      printf("Ejecutando version2\n");
       char* s = argv[5];
-      printf("%s\n", s);
       char mod[512];
       getAllButFirstAndLast(s, mod);
-      printf("%s\n", mod);
       int s_integer = atoi(mod);
-      printf("%i\n", s_integer+1);
 
 
     }

@@ -26,6 +26,8 @@ LinkedList* linkedlist_init(int q)
 /** Inserta un elemento al final de la lista */
 void linkedlist_append(LinkedList* list, Process* element)
 {
+    
+        printf("%d e\n", list->size);
     LinkedListNode *new_node = malloc(sizeof(LinkedListNode));
     if (list->size == 0){
         list->root = new_node;
@@ -36,7 +38,9 @@ void linkedlist_append(LinkedList* list, Process* element)
     new_node->data = element;
     new_node->next = NULL;
     list->last = new_node;
-    list->size += 1;
+    list->size++;
+    
+        printf("%d f\n", list->size);
 }
 
 /** Inserta el elemento dado en la posicion indicada */
@@ -62,7 +66,7 @@ void linkedlist_insert(LinkedList* list, Process* element, int position)
     }
 
     new_node->data = element;
-    list->size += 1;
+    list->size++;
 }
 
 /** Elimina el elemento de la posicion indicada y lo retorna */
@@ -75,9 +79,9 @@ Process* linkedlist_delete(LinkedList* list, int position)
         list->root = aux->next;
         p = aux->data;
         free(aux);
-        printf("%d\n", list->size);
+        printf("%d c\n", list->size);
         list->size--;
-        printf("%d\n", list->size);
+        printf("%d d\n", list->size);
         return p;
     }
     else {
@@ -96,7 +100,7 @@ Process* linkedlist_delete(LinkedList* list, int position)
             aux->next = aux->next->next;
             free(aux2);
         }
-        list->size -= 1;
+        list->size--;
         return p;
     }
 }
