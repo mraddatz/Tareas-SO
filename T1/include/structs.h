@@ -10,6 +10,13 @@ typedef struct {
     int cola;
     int burst_count;
     int* bursts;
+    //0 es No ha entrado, 1 es READY, 2 es IN PROCESS, 3 es Terminado
+    int estado;
+    int cpu_turns;
+    int bloqueos;
+    int finish_time;
+    int waiting_time;
+    int response_time;
 } Process;
 
 // ArrayList

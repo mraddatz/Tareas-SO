@@ -3,6 +3,7 @@
 #include "include/linkedlist.h"
 #include "include/mlfq.h"
 
+void sigint_handler(int);
 
 int main(int argc, char *argv[]){
     char* version = argv[1];
@@ -17,8 +18,7 @@ int main(int argc, char *argv[]){
     if (strcmp(version, "v1") == 0){
       printf("Ejecutando version1\n");
       while (true){
-        printf("tick %d...\n", mlfq->timer);
-        printf("Finished: %d\n", mlfq->finished_procs->count);
+        signal(SIGINT, sigint_handler);
         check_entry_times(mlfq);
         if (mlfq->executing_proc == NULL) {
             printf("No encontro procesos..");
@@ -26,8 +26,10 @@ int main(int argc, char *argv[]){
         }
 
         decrement_counters(mlfq, &queue_signal);
+        count_waitings(mlfq);
         switch (queue_signal) {
             case FIN_SIGNAL :
+
                 finish_process(mlfq);
                 terminados++;
                 if (mlfq->finished_procs->count == mlfq->procs->count) {
@@ -37,6 +39,52 @@ int main(int argc, char *argv[]){
                 queue_signal = 0;
                 break;
             case DOWN_QUEUE :
+                mlfq->executing_proc->bloqueos++;
+                update_queue(mlfq, true);
+                queue_signal = 0;
+                break;
+            case SAME_QUEUE :
+                update_queue(mlfq, false); 
+                queue_signal = 0; 
+                break;    
+        }
+        sleep(1);
+        mlfq->timer++;
+        if (mlfq->timer == 10000) break;
+      }
+    }
+     else if (strcmp(version, "v2") == 0){
+        if (!argv[5]){
+            printf("Falta argumento para el S\n");
+            return 1;
+        }
+            
+       int s = atoi(argv[5]);
+       int time_to_reset = s;
+      printf("Ejecutando version 2\n");
+      while (true){
+        check_entry_times(mlfq);
+        if (mlfq->executing_proc == NULL) {
+            printf("No encontro procesos..");
+            break;
+        }
+
+        decrement_counters(mlfq, &queue_signal);
+        count_waitings(mlfq);
+        switch (queue_signal) {
+            case FIN_SIGNAL :
+
+                finish_process(mlfq);
+                terminados++;
+                if (mlfq->finished_procs->count == mlfq->procs->count) {
+                    printf("COMPLETED\n\n\n");
+                    print_final_stats(mlfq);
+                    return 0;
+                }
+                queue_signal = 0;
+                break;
+            case DOWN_QUEUE :
+                mlfq->executing_proc->bloqueos++;
                 update_queue(mlfq, true);
                 queue_signal = 0;
                 break;
@@ -47,19 +95,73 @@ int main(int argc, char *argv[]){
         }
         // sleep(1);
         mlfq->timer++;
+        if (time_to_reset<=0){
+            procesos_a_primera_cola(mlfq);
+            time_to_reset=s;
+        }
+        time_to_reset--;
+
         if (mlfq->timer == 10000) break;
       }
-    }
-    // else if (strcmp(version, "v2") == 0){
-    //   char* s = argv[5];
-    //   char mod[512];
-    //   getAllButFirstAndLast(s, mod);
-    //   int s_integer = atoi(mod);
-    // }
-    //else if (version=='v3'){
-    //  printf("Ejecutando version3\n");
+     }
+    else if (strcmp(version, "v2") == 0){
+      printf("Ejecutando version3\n");
+      if (!argv[5]){
+        if (!argv[5]){
+            printf("Falta argumento para el S\n");
+            return 1;
+        }
+            
+       int s = atoi(argv[5]);
+       int time_to_reset = s;
 
-    //}
+       //Ajustando quantums
+       ajustar_quantum_v3(mlfq);
+      while (true){
+        check_entry_times(mlfq);
+        if (mlfq->executing_proc == NULL) {
+            printf("No encontro procesos..");
+            break;
+        }
+
+        decrement_counters(mlfq, &queue_signal);
+        count_waitings(mlfq);
+        switch (queue_signal) {
+            case FIN_SIGNAL :
+
+                finish_process(mlfq);
+                terminados++;
+                if (mlfq->finished_procs->count == mlfq->procs->count) {
+                    printf("COMPLETED\n\n\n");
+                    print_final_stats(mlfq);
+                    return 0;
+                }
+                queue_signal = 0;
+                break;
+            case DOWN_QUEUE :
+                mlfq->executing_proc->bloqueos++;
+                update_queue(mlfq, true);
+                queue_signal = 0;
+                break;
+            case SAME_QUEUE :
+                update_queue(mlfq, false); 
+                queue_signal = 0; 
+                break;    
+        }
+        // sleep(1);
+        mlfq->timer++;
+        if (time_to_reset<=0){
+            procesos_a_primera_cola(mlfq);
+            time_to_reset=s;
+        }
+        time_to_reset--;
+
+        if (mlfq->timer == 10000) break;
+      }
+        }
+
+
+    }
 
     // Process* proc;
     // proc = arraylist_get(mlfq->procs, 4);
@@ -68,7 +170,6 @@ int main(int argc, char *argv[]){
     // linkedlist_append(&(mlfq->queues[1]), proc);
     // baja_prioridad(proc,mlfq->queues);
     // printf("Id Proceso %i\n",proc->PID);
-
     return 1;
 }
 
@@ -89,6 +190,8 @@ MLFQ* mlfq_init(char* buffer, int quantum, int queues) {
 
     return mlfq;
 }
+
+
 
 // Crea y retorna un proceso a partir del string que lo define
 Process* crear_proceso(char string[], int PID){
@@ -120,6 +223,11 @@ Process* crear_proceso(char string[], int PID){
         };
         i++;
     }
+
+    proceso->cpu_turns=0;
+    proceso->bloqueos=0;
+    proceso->response_time=-1;
+    proceso->estado=0;
 
     return proceso;
 };
@@ -177,7 +285,14 @@ ArrayList* get_procesos(char* buffer){
 // Mete proceso a la queue num
 void entra_proceso(Process* p, MLFQ* mlfq, int num, bool set_time){
     //Cambiar quentum y cola de proceso
+    //char* ch;
+    //strcpy(ch, 'READY');
+    if (p->estado==2){
+        printf("Proceso %s paso de RUNNING a READY\n", p->nombre);
+    }
     p->cola = num;
+    p->estado=1;
+    //strcpy(p->estado, ch);
     linkedlist_append(&(mlfq->queues[num]), p);
     if (set_time == true) p->exec_time = mlfq->queues[num].quantum;
     seleccionar_proceso(mlfq); // En caso de p tenga mejor prioridad que exec_proc
@@ -188,6 +303,9 @@ void seleccionar_proceso(MLFQ* mlfq){
     for (int i = 0; i < mlfq->num_queues; i++){
         if ((mlfq->queues[i]).size > 0){
             mlfq->executing_proc = linkedlist_get(&(mlfq->queues[i]), 0);
+            if (mlfq->executing_proc->response_time==-1){
+                mlfq->executing_proc->response_time=mlfq->timer+2;
+            }
             return;
         }
     }
@@ -202,6 +320,7 @@ void check_entry_times(MLFQ* mlfq) {
     for (int i=0; i < mlfq->procs->count; i++){
         p = arraylist_get(mlfq->procs, i);
         if (p->entry_time == mlfq->timer){
+            printf("Entro proceso %s en tiempo %d\n", p->nombre, mlfq->timer);
             entra_proceso(p, mlfq, 0, true);
         }
     }
@@ -229,8 +348,16 @@ void getAllButFirstAndLast(const char *input, char *output) {
 // Decrementa los contadores de p y revisa si agota un burst o exec_time
 void decrement_counters(MLFQ* mlfq, int* status){
     Process* p = mlfq->executing_proc;
+    //Si antes su estado era ready imprimimos que paso de ready a Running
+    if (p->estado == 1){
+        printf("Scheduler eligio proceso %s para ejecutar\n", p->nombre);
+        printf("Proceso %s paso de READY a RUNNING\n", p->nombre);
+    }
+    p->estado=2;
     p->exec_time--;
+    p->cpu_turns++;
     int aux;
+    //Esto es como un nuevo tick
     for (int i = 0; i < p->burst_count; i++) {
         aux = i;
         if (p->bursts[i] != 0) {
@@ -250,9 +377,9 @@ void decrement_counters(MLFQ* mlfq, int* status){
         *status = DOWN_QUEUE;
     }
 
-    printf("\n");
-    printf("PID: %d\nExec time: %d\nBurst: %d\nBurst count: %d\nCodigo: %d\n\n",
-    p->PID, p->exec_time, p->bursts[aux], p->burst_count, *status);
+    //printf("\n");
+    //printf("PID: %d\nExec time: %d\nBurst: %d\nBurst count: %d\nCodigo: %d\n\n",
+    //p->PID, p->exec_time, p->bursts[aux], p->burst_count, *status);
     return;
     
 }
@@ -262,22 +389,98 @@ void update_queue(MLFQ* mlfq, bool downgrade) {
     int index = mlfq->executing_proc->cola;
     // Sacar al exec_proc de la cola en que esta
     Process* p = linkedlist_delete(&(mlfq->queues[index]), 0);
+    p->estado=1;
     if (downgrade == true) {
+        printf("Proceso %s paso de RUNNING a READY disminuyendo su prioridad\n", p->nombre);
         if (index != mlfq->num_queues - 1) {
             // Caso en que no esta en la ultima cola, baja.
             // Si no, hace RR
             index++;
         }
+    else{printf("Proceso %s paso de RUNNING a READY manteniendo su prioridad\n", p->nombre); }
     }
     entra_proceso(p, mlfq, index, downgrade);
 }
 
 // Saca a exec_proc de las colas y lo mete a la lista finished
 void finish_process(MLFQ* mlfq) {
-    printf("Termino uno\n\n");
     int index = mlfq->executing_proc->cola;
     Process* p = linkedlist_delete(&(mlfq->queues[index]), 0);
+    p->finish_time=mlfq->timer+1;
+    p->estado=3;
+    printf("El proceso %s ha terminado (FINISHED)\n", p->nombre);
     arraylist_append(mlfq->finished_procs, p);
-    printf("Queue: %d con %d procs\nFinished: %d\n", p->cola, mlfq->queues[index].size, mlfq->finished_procs->count);
     seleccionar_proceso(mlfq);
+}
+
+//Imprime datos finales solicitados
+void print_final_stats(MLFQ* mlfq){
+    printf("Procesos terminados: %i\n", mlfq->finished_procs->count);
+    printf("Tiempo Total: %i\n", mlfq->timer);
+    printf("\n");
+    int p;
+
+    for (p=0; p<mlfq->procs->count;p++){
+        //printf("p\n" );
+        Process* proceso;
+        proceso = arraylist_get(mlfq->procs, p);
+        printf("%s:\n", proceso->nombre);
+        printf("Turnos de CPU: %d\n", proceso->cpu_turns);
+        printf("Bloqueos: %d\n", proceso->bloqueos);
+        printf("Turnaround time: %d\n", proceso->finish_time-proceso->entry_time);
+        printf("Response time: %d\n", proceso->response_time-proceso->entry_time);
+        printf("Waiting Time: %d\n", proceso->waiting_time);
+        printf("\n");
+    }
+
+
+}
+
+//Cuenta la cantidad de procesos en estado waiting
+void count_waitings(MLFQ* mlfq){
+    for (int p=0; p < mlfq->procs->count;p++){
+        //printf("%i\n",p );
+        Process* proceso = arraylist_get(mlfq->procs, p);
+        //printf("EStado proceso %s es: %i\n", proceso->nombre, proceso->estado );
+        if (proceso->estado == 1){
+            proceso->waiting_time++;
+        }
+}
+}
+
+//Traspasar todos los procesos a la primera prioridad
+void procesos_a_primera_cola(MLFQ* mlfq){
+    int i;
+    for (i=1; i < mlfq->num_queues; i++){
+        while (mlfq->queues[i].size > 0 ){
+            Process* p = linkedlist_delete(&(mlfq->queues[i]), 0);
+            p->cola = 0;
+            p->exec_time = mlfq->queues[0].quantum;
+            linkedlist_append(&(mlfq->queues[0]), p);
+
+        }
+    }
+
+}
+
+void ajustar_quantum_v3(MLFQ* mlfq){
+    int i;
+    int q = mlfq->queues[0].quantum;
+    int queue_number = mlfq->num_queues;
+    int new_quantum;
+    int prioridad;
+    for (i=1; i<queue_number; i++){
+        prioridad = (queue_number - 1 - i);
+        new_quantum = (queue_number-prioridad)*q;
+        mlfq->queues[i].quantum = new_quantum;
+
+    }
+}
+
+ void sigint_handler(int sig)
+{
+    /*do something*/
+    printf("Interrumpiste la ejecucion %d\n",getpid());
+
+    return;
 }

@@ -49,4 +49,18 @@ void update_queue(MLFQ* mlfq, bool downgrade);
 // Saca a exec_proc de las colas y lo mete a la lista finished
 void finish_process(MLFQ* mlfq);
 
+//Imprime datos finales solicitados
+void print_final_stats(MLFQ* mlfq);
+
+//Cuenta la cantidad de procesos en estado waiting
+void count_waitings(MLFQ* mlfq);
+
+//Traspasar todos los procesos a la primera prioridad
+void procesos_a_primera_cola(MLFQ* mlfq);
+
+//Cambiar Quantums de colas
+void ajustar_quantum_v3(MLFQ* mlfq);
+
+//Maneja el ctr+c
+void sigint_handler(int);
 #endif
