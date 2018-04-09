@@ -28,4 +28,6 @@ void baja_prioridad(Process* p, LinkedList* colas);
 // Recorre la lista y ve quienes ya estan listos para entrar a la Queue
 void check_entry_times(ArrayList* lista, int tick);
 
+void getAllButFirstAndLast(const char *input, char *output);
+
 #endif

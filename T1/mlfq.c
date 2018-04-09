@@ -4,45 +4,57 @@
 #include "include/mlfq.h"
 
 int main(int argc, char *argv[]){
-    char* buffer = get_buffer(argv[1]);
+    char* version = argv[1];
+    char* buffer = get_buffer(argv[2]);
     ArrayList* lista = (ArrayList*)get_procesos(buffer);
     int tick = 0;
-    int queues = atoi(argv[2]);
+    int queues = atoi(argv[4]);
     LinkedList* queues_list[queues];
-    int i;
+    int i ;
     int quantum = atoi(argv[3]);
     for (i=0; i<queues; i++){
         LinkedList* cola = linkedlist_init(quantum);
-        queues_list[i] = cola;    
+        queues_list[i] = cola;
     };
 
-    while (true){
-        printf("tick...\n");
-        check_entry_times(lista, tick);
-        sleep(1);
-        tick++;
+    printf("%s\n", version);
 
-        if(tick == 2) break;
+    if (strcmp(version, "v1") == 0){
+      printf("Ejecutando version1\n");
+      while (true){
+          printf("tick...\n");
+          check_entry_times(lista, tick);
+          sleep(1);
+          tick++;
+          printf("%i\n", lista->size);
+          if(tick == 2) break;
+      }
     }
+    else if (strcmp(version, "v2") == 0){
+      char* s = argv[5];
+      char mod[512];
+      getAllButFirstAndLast(s, mod);
+      int s_integer = atoi(mod);
+
+
+    }
+    //else if (version=='v3'){
+    //  printf("Ejecutando version3\n");
+
+    //}
+
 
     Process* proc;
     proc = arraylist_get(lista, 4);
     entra_proceso(proc, *queues_list);
     arraylist_destroy(lista);
-    printf("Id Proceso %i\n",proc->PID);
-    printf("Elementos cola 0:%d\n", queues_list[0]->size);
-    printf("Elementos cola 1: %d\n", queues_list[1]->size);
-    //proc = linkedlist_delete(queues_list[0], 0);
     linkedlist_append(queues_list[1], proc);
-    baja_prioridad(proc, *queues_list);
-    //printf("%i\n",arraylist_get(lista, 4)->cola);
+    baja_prioridad(proc,*queues_list);
     printf("Id Proceso %i\n",proc->PID);
 
-    printf("Elementos cola 0: %d\n", queues_list[0]->size);
-    printf("Elementos cola 1: %d\n", queues_list[1]->size);
-    printf("En la segunda queue esta %s", linkedlist_get(queues_list[1], 0)->nombre);
     return 0;
 }
+
 
 // Crea y retorna un proceso a partir del string que lo define
 Process* crear_proceso(char string[], int PID){
@@ -105,7 +117,6 @@ char* get_buffer(char filename[]){
     //Copiamos el texto al buffer
     fread(buffer, sizeof(char), numbytes, infile);
     fclose(infile);
-
     return buffer;
     // printf("number of bytes: %ld\n", numbytes);
     // printf("The file  contains this text\n\n%s", buffer);
@@ -113,8 +124,8 @@ char* get_buffer(char filename[]){
 
 // Retorna lista de procesos a partir del buffer del archivo
 void* get_procesos(char* buffer){
-    //Algoritmo para separar por lineas (el mismo sirve para separar palabras, 
-    //cambiar el "\n" pint or " ")
+    //Algoritmo para separar por lineas (el mismo sirve para separar palabras,
+    //cambiar el "\n" por " ")
     char *ch;
     ArrayList* lista = arraylist_init();
     int pid = 1;
@@ -148,7 +159,6 @@ void check_entry_times(ArrayList* lista, int tick) {
 }
 
 void baja_prioridad(Process* p, LinkedList* colas){
-    printf("Bajando de prioridad proceso = %d\n", p->PID);
     //Cambiar quentum y cola de proceso
     int cola_actual = p->cola;
     p->cola = cola_actual+1;  
@@ -157,8 +167,13 @@ void baja_prioridad(Process* p, LinkedList* colas){
     linkedlist_append(&(colas[cola_actual+1]), p);
 
     p->exec_time = colas[cola_actual+1].quantum;
-    printf("%d a\n", colas[cola_actual].size);
-    printf("%d b\n", colas[cola_actual+1].size);
+}
 
-
+void getAllButFirstAndLast(const char *input, char *output)
+{
+  int len = strlen(input);
+  if(len > 0)
+    strcpy(output, ++input);
+  if(len > 1)
+    output[len - 2] = '\0';
 }
