@@ -3,7 +3,10 @@
 #include "include/linkedlist.h"
 #include "include/mlfq.h"
 
-void sigint_handler(int);
+static volatile int keepRunning = 1;
+void intHandler(int dummy) {
+    keepRunning = 0;
+}
 
 int main(int argc, char *argv[]){
     char* version = argv[1];
@@ -14,11 +17,10 @@ int main(int argc, char *argv[]){
 
     int queue_signal;
     MLFQ* mlfq         = mlfq_init(buffer, quantum, queues);
-
+    signal(SIGINT, intHandler);
     if (strcmp(version, "v1") == 0){
       printf("Ejecutando version1\n");
-      while (true){
-        signal(SIGINT, sigint_handler);
+      while (keepRunning){
         check_entry_times(mlfq);
         if (mlfq->executing_proc == NULL) {
             printf("No encontro procesos..");
@@ -34,6 +36,7 @@ int main(int argc, char *argv[]){
                 terminados++;
                 if (mlfq->finished_procs->count == mlfq->procs->count) {
                     printf("COMPLETED\n\n\n");
+                    print_final_stats(mlfq);
                     return 0;
                 }
                 queue_signal = 0;
@@ -52,6 +55,8 @@ int main(int argc, char *argv[]){
         mlfq->timer++;
         if (mlfq->timer == 10000) break;
       }
+      printf("Salio del while\n" );
+      print_final_stats(mlfq);
     }
      else if (strcmp(version, "v2") == 0){
         if (!argv[5]){
@@ -103,6 +108,7 @@ int main(int argc, char *argv[]){
 
         if (mlfq->timer == 10000) break;
       }
+      print_final_stats(mlfq);
      }
     else if (strcmp(version, "v2") == 0){
       printf("Ejecutando version3\n");
@@ -154,9 +160,9 @@ int main(int argc, char *argv[]){
             time_to_reset=s;
         }
         time_to_reset--;
-
         if (mlfq->timer == 10000) break;
       }
+      print_final_stats(mlfq);
         }
 
     
@@ -380,18 +386,18 @@ void decrement_counters(MLFQ* mlfq, int* status){
 
 // Baja o reingresa de queue al proceso que se esta ejecutando
 void update_queue(MLFQ* mlfq, bool downgrade) {
+
     int index = mlfq->executing_proc->cola;
     // Sacar al exec_proc de la cola en que esta
     Process* p = linkedlist_delete(&(mlfq->queues[index]), 0);
+    printf("Proceso %s paso de RUNNING a READY\n", p->nombre);
     p->estado=1;
-    if (downgrade == true) {
-        printf("Proceso %s paso de RUNNING a READY disminuyendo su prioridad\n", p->nombre);
+    if (downgrade) {
         if (index != mlfq->num_queues - 1) {
             // Caso en que no esta en la ultima cola, baja.
             // Si no, hace RR
             index++;
         }
-    else{printf("Proceso %s paso de RUNNING a READY manteniendo su prioridad\n", p->nombre); }
     }
     entra_proceso(p, mlfq, index, downgrade);
 }
@@ -439,6 +445,10 @@ void count_waitings(MLFQ* mlfq){
         if (proceso->estado == 1){
             proceso->waiting_time++;
         }
+        if (!(proceso->estado==3)){
+            proceso->finish_time++;
+            proceso->response_time++;
+        }
 }
 }
 
@@ -471,11 +481,5 @@ void ajustar_quantum_v3(MLFQ* mlfq){
     }
 }
 
- void sigint_handler(int sig)
-{
-    /*do something*/
-    printf("Interrumpiste la ejecucion %d\n",getpid());
 
-    return;
-}
 
