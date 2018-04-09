@@ -27,7 +27,7 @@ char* get_buffer(char filename[]);
 ArrayList* get_procesos(char* buffer);
 
 //Mete id de proceso en la cola (LinkedList)
-void entra_proceso(Process* p, LinkedList* colas, int num);
+void entra_proceso(Process* p, LinkedList* colas, int num, bool set_time);
 
 //Mete id de proceso en la cola (LinkedList)
 void baja_prioridad(Process* p, LinkedList* colas);
@@ -41,9 +41,9 @@ void check_entry_times(MLFQ* mlfq);
 void getAllButFirstAndLast(const char *input, char *output);
 
 // Decrementa los contadores de p y revisa si agota un burst o exec_time
-void decrement_counters(Process* p, char** status);
+void decrement_counters(Process* p, int* status);
 
-// Baja de queu al proceso que se esta ejecutando
-void downgrade_queue(MLFQ* mlfq);
+// Baja o reingresa de queue al proceso que se esta ejecutando
+void update_queue(MLFQ* mlfq, bool downgrade);
 
 #endif
