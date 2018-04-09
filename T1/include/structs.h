@@ -9,6 +9,7 @@ typedef struct {
     int exec_time;
     int cola;
     int* bursts;
+    int burst_count;
 } Process;
 
 /** Estructura de una arraylist */

@@ -1,5 +1,5 @@
 // importo el archivo linkedlist.h
-#include <include/linkedlist.h>
+#include "include/linkedlist.h"
 // Libreria estandar de C
 #include <stdlib.h>
 #include <stdio.h>

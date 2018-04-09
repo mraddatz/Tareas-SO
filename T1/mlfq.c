@@ -23,7 +23,7 @@ int main(int argc, char *argv[]){
       printf("Ejecutando version1\n");
       while (true){
           printf("tick...\n");
-          check_entry_times(lista, tick);
+          check_entry_times(lista, tick, queues_list[0]);
           sleep(1);
           tick++;
           printf("%i\n", lista->size);
@@ -43,6 +43,14 @@ int main(int argc, char *argv[]){
 
     //}
 
+    Process* p = linkedlist_get(queues_list[0], 0);
+    char* status = "";
+    p->exec_time = 10;
+    for (int i = 0; i < 15; i++) {
+        decrement_counters(p, &status);
+        printf("Exec time: %d\nPrimer burst: %d\nCodigo: %s\n",
+        p->exec_time, p->bursts[0], status);
+    }
 
     Process* proc;
     proc = arraylist_get(lista, 4);
@@ -77,6 +85,7 @@ Process* crear_proceso(char string[], int PID){
         // Tercer elemento es N
         else if (i == 2) {
             N = atoi(ch);
+            proceso->burst_count = N;
             proceso->bursts = malloc(N * sizeof(int));
         }
         else {
@@ -146,14 +155,15 @@ void entra_proceso(Process* p, LinkedList* colas){
     p->exec_time = colas[0].quantum;
     linkedlist_append(&(colas[0]), p);
 }
+
 // Mete a la queue a los procesos que les toque entrar
-void check_entry_times(ArrayList* lista, int tick) {
+void check_entry_times(ArrayList* lista, int tick, LinkedList* queue) {
     Process* p;
 
     for (int i=0; i < lista->count; i++){
         p = arraylist_get(lista, i);
         if (p->entry_time == tick){
-            printf("%s entra a la cola en T=%d (PID=%d)\n", p->nombre, tick, p->PID);
+            entra_proceso(p, queue);
         }
     }
 }
@@ -176,4 +186,25 @@ void getAllButFirstAndLast(const char *input, char *output)
     strcpy(output, ++input);
   if(len > 1)
     output[len - 2] = '\0';
+}
+
+// Decrementa los contadores de p y revisa si agota un burst o exec_time
+void decrement_counters(Process* p, char** status){
+    for (int i=0; i < p->burst_count; i++) {
+        if (p->bursts[i] != 0) {
+            p->bursts[i]--;
+            if (p->bursts[i] == 0) {
+                *status = "SAME_QUEUE";
+                if (i == p->burst_count - 1) {
+                    *status = "FINISHED";
+                }
+            }
+            break;
+        }
+    }
+    p->exec_time--;
+    if (p->exec_time == 0) {
+            *status = "DECR_QUEUE";
+        return;
+    }
 }
