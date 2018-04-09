@@ -4,10 +4,11 @@
 #include "include/mlfq.h"
 
 int main(int argc, char *argv[]){
-    char* buffer = get_buffer(argv[1]);
+    char* version = argv[1];
+    char* buffer = get_buffer(argv[2]);
     ArrayList* lista = (ArrayList*)get_procesos(buffer);
     int tick = 0;
-    int queues = atoi(argv[2]);
+    int queues = atoi(argv[4]);
     LinkedList* queues_list[queues];
     int i ;
     int quantum = atoi(argv[3]);
@@ -16,14 +17,36 @@ int main(int argc, char *argv[]){
         queues_list[i] = cola;
     };
 
-    while (true){
-        printf("tick...\n");
-        check_entry_times(lista, tick);
-        sleep(1);
-        tick++;
-        printf("%i\n", lista->size);
-        if(tick == 2) break;
+    printf("%s\n", version);
+
+    if (strcmp(version, "v1") == 0){
+      printf("Ejecutando version1\n");
+      while (true){
+          printf("tick...\n");
+          check_entry_times(lista, tick);
+          sleep(1);
+          tick++;
+          printf("%i\n", lista->size);
+          if(tick == 2) break;
+      }
     }
+    else if (strcmp(version, "v2") == 0){
+      printf("Ejecutando version2\n");
+      char* s = argv[5];
+      printf("%s\n", s);
+      char mod[512];
+      getAllButFirstAndLast(s, mod);
+      printf("%s\n", mod);
+      int s_integer = atoi(mod);
+      printf("%i\n", s_integer+1);
+
+
+    }
+    //else if (version=='v3'){
+    //  printf("Ejecutando version3\n");
+
+    //}
+
 
     Process* proc;
     proc = arraylist_get(lista, 4);
@@ -35,6 +58,7 @@ int main(int argc, char *argv[]){
 
     return 0;
 }
+
 
 // Crea y retorna un proceso a partir del string que lo define
 Process* crear_proceso(char string[], int PID){
@@ -97,7 +121,6 @@ char* get_buffer(char filename[]){
     //Copiamos el texto al buffer
     fread(buffer, sizeof(char), numbytes, infile);
     fclose(infile);
-
     return buffer;
     // printf("number of bytes: %ld\n", numbytes);
     // printf("The file  contains this text\n\n%s", buffer);
@@ -150,4 +173,13 @@ void baja_prioridad(Process* p, void* colas){
     p->exec_time = aux[cola_actual+1].quantum;
 
 
+}
+
+void getAllButFirstAndLast(const char *input, char *output)
+{
+  int len = strlen(input);
+  if(len > 0)
+    strcpy(output, ++input);
+  if(len > 1)
+    output[len - 2] = '\0';
 }
