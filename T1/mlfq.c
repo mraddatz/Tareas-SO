@@ -9,18 +9,27 @@ int main(int argc, char *argv[]){
     int quantum   = atoi(argv[3]);
     int queues    = atoi(argv[4]);
 
-    MLFQ* mlfq = mlfq_init(buffer, quantum, queues);
-
-    printf("%s\n", version);
+    int* queue_signal = "";
+    MLFQ* mlfq         = mlfq_init(buffer, quantum, queues);
 
     if (strcmp(version, "v1") == 0){
       printf("Ejecutando version1\n");
       while (true){
-          printf("tick...\n");
-          check_entry_times(mlfq);
-          sleep(1);
-          mlfq->timer++;
-          if(mlfq->timer == 2) break;
+        printf("tick...\n");
+        check_entry_times(mlfq);
+        if (mlfq->executing_proc == NULL) seleccionar_proceso(mlfq);
+        decrement_counters(mlfq->executing_proc, &queue_signal);
+        switch (*queue_signal) {
+            case FIN_SIGNAL :
+                break;
+            case DOWN_QUEUE :
+                downgrade_queue(mlfq);
+            case SAME_QUEUE :
+                break;        
+        }
+        sleep(1);
+        mlfq->timer++;
+        if (mlfq->timer == 10) break;
       }
     }
     // else if (strcmp(version, "v2") == 0){
@@ -34,18 +43,9 @@ int main(int argc, char *argv[]){
 
     //}
 
-    Process* p = linkedlist_get(&(mlfq->queues[0]), 0);
-    char* status = "";
-    p->exec_time = 10;
-    for (int i = 0; i < 15; i++) {
-        decrement_counters(p, &status);
-        printf("Exec time: %d\nPrimer burst: %d\nCodigo: %s\n",
-        p->exec_time, p->bursts[0], status);
-    }
-
     Process* proc;
     proc = arraylist_get(mlfq->processes, 4);
-    entra_proceso(proc, mlfq->queues);
+    entra_proceso(proc, mlfq->queues, 0);
     arraylist_destroy(mlfq->processes);
     linkedlist_append(&(mlfq->queues[1]), proc);
     baja_prioridad(proc,mlfq->queues);
@@ -65,6 +65,8 @@ MLFQ* mlfq_init(char* buffer, int quantum, int queues) {
     };
     
     mlfq->timer = 0;
+    mlfq->num_queues = queues;
+    seleccionar_proceso(mlfq);
 
     return mlfq;
 }
@@ -153,22 +155,33 @@ ArrayList* get_procesos(char* buffer){
     return lista;
 }
 
-void entra_proceso(Process* p, LinkedList* colas){
-    printf("Entro proceso PID = %d\n", p->PID);
+// Mete proceso a la queue num
+void entra_proceso(Process* p, LinkedList* queues, int num){
     //Cambiar quentum y cola de proceso
-    p->cola=0;
-    p->exec_time = colas[0].quantum;
-    linkedlist_append(&(colas[0]), p);
+    p->cola = num;
+    p->exec_time = queues[num].quantum;
+    linkedlist_append(&(queues[num]), p);
 }
 
-// Mete a la queue a los procesos que les toque entrar
+//Selecciona proceso a ejecutar
+void seleccionar_proceso(MLFQ* mlfq){
+    for (int i = 0; i < mlfq->num_queues; i++){
+        if ((mlfq->queues[i]).size > 0){
+            mlfq->executing_proc = linkedlist_get(&(mlfq->queues[i]), 0);
+            return;
+        }
+    }
+    mlfq->executing_proc = NULL;
+}
+
+// Mete a la queue0 a los procesos que les toque entrar
 void check_entry_times(MLFQ* mlfq) {
     Process* p;
 
     for (int i=0; i < mlfq->processes->count; i++){
         p = arraylist_get(mlfq->processes, i);
         if (p->entry_time == mlfq->timer){
-            entra_proceso(p, &(mlfq->queues[0]));
+            entra_proceso(p, mlfq->queues, 0);
         }
     }
 }
@@ -206,9 +219,27 @@ void decrement_counters(Process* p, char** status){
             break;
         }
     }
+
     p->exec_time--;
     if (p->exec_time == 0) {
-            *status = DECR_QUEUE;
+            *status = DOWN_QUEUE;
         return;
     }
+    
+    printf("Exec time: %d\nPrimer burst: %d\nCodigo: %s\n",
+    p->exec_time, p->bursts[0], *status);
+}
+
+// Baja de queue al proceso que se esta ejecutando
+void downgrade_queue(MLFQ* mlfq) {
+    int index = mlfq->executing_proc->cola;
+    // Sacar al exec_proc de la cola en que esta
+    Process* p = linkedlist_delete(&(mlfq->queues[index]), 0);
+    if (index != mlfq->num_queues) {
+        // Caso en que no esta en la ultima cola, baja.
+        // Si no, hace RR
+        index++;
+    }
+    linkedlist_append(&(mlfq->queues[index]), p);
+    seleccionar_proceso(mlfq);
 }

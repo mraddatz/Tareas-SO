@@ -9,8 +9,8 @@ typedef struct {
     char estado[20];
     int exec_time;
     int cola;
-    int* bursts;
     int burst_count;
+    int* bursts;
 } Process;
 
 // ArrayList
@@ -40,6 +40,7 @@ typedef struct {
     ArrayList* processes;
     LinkedList* queues;
     Process* executing_proc;
+    int num_queues;
     int timer;
 } MLFQ;
 

@@ -1,9 +1,9 @@
 #ifndef MLFQ_H
 #define MLFQ_H
 
-#define FIN_SIGNAL "1" // Finished signal
-#define DECR_QUEUE "2" // Decrement queue
-#define SAME_QUEUE "3" // Same queue
+#define FIN_SIGNAL 1 // Finished signal
+#define DOWN_QUEUE 2 // Decrement queue
+#define SAME_QUEUE 3 // Same queue
 
 #include <stdio.h>
 #include <string.h>
@@ -27,10 +27,13 @@ char* get_buffer(char filename[]);
 ArrayList* get_procesos(char* buffer);
 
 //Mete id de proceso en la cola (LinkedList)
-void entra_proceso(Process* p, LinkedList* colas);
+void entra_proceso(Process* p, LinkedList* colas, int num);
 
 //Mete id de proceso en la cola (LinkedList)
 void baja_prioridad(Process* p, LinkedList* colas);
+
+//Selecciona proceso a ejecutar
+void seleccionar_proceso(MLFQ* mlfq);
 
 // Recorre la lista y ve quienes ya estan listos para entrar a la Queue
 void check_entry_times(MLFQ* mlfq);
@@ -39,5 +42,8 @@ void getAllButFirstAndLast(const char *input, char *output);
 
 // Decrementa los contadores de p y revisa si agota un burst o exec_time
 void decrement_counters(Process* p, char** status);
+
+// Baja de queu al proceso que se esta ejecutando
+void downgrade_queue(MLFQ* mlfq);
 
 #endif

@@ -1,5 +1,5 @@
-T1/t1
-T1/T1.pdf
+t1
+T1.pdf
 *.o
 .vscode
-T1/obj/
+obj/
