@@ -31,10 +31,7 @@ int main(int argc, char *argv[]){
       }
     }
     else if (strcmp(version, "v2") == 0){
-      char* s = argv[5];
-      char mod[512];
-      getAllButFirstAndLast(s, mod);
-      int s_integer = atoi(mod);
+        int s = atoi(argv[5])
 
 
     }
@@ -89,6 +86,9 @@ Process* crear_proceso(char string[], int PID){
     return proceso;
 };
 
+//Process* seleccionar_proceso(){
+
+//}
 // Retorna el buffer completo del archivo
 char* get_buffer(char filename[]){
     FILE    *infile;
@@ -169,11 +169,4 @@ void baja_prioridad(Process* p, LinkedList* colas){
     p->exec_time = colas[cola_actual+1].quantum;
 }
 
-void getAllButFirstAndLast(const char *input, char *output)
-{
-  int len = strlen(input);
-  if(len > 0)
-    strcpy(output, ++input);
-  if(len > 1)
-    output[len - 2] = '\0';
-}
+
