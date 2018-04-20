@@ -3,7 +3,7 @@ CFLAGS=-c -Wall -I.
 LDFLAGS= 
 SOURCES=mlfq.c linkedlist.c arraylist.c
 OBJECTS=$(SOURCES:.c=.o)
-EXECUTABLE=t1
+EXECUTABLE=mqlf
 
 all: $(SOURCES) $(EXECUTABLE)
     

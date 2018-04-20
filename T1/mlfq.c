@@ -22,10 +22,11 @@ int main(int argc, char *argv[]){
       printf("Ejecutando version1\n");
       while (keepRunning){
         check_entry_times(mlfq);
-        if (mlfq->executing_proc == NULL) {
-            printf("No encontro procesos..");
-            break;
+        if (mlfq->executing_proc == NULL){
+            mlfq->timer++;
+            //count_waitings(mlfq);
         }
+        else{
 
         decrement_counters(mlfq, &queue_signal);
         count_waitings(mlfq);
@@ -51,29 +52,34 @@ int main(int argc, char *argv[]){
                 queue_signal = 0; 
                 break;    
         }
-        sleep(1);
+        //sleep(1);
         mlfq->timer++;
         if (mlfq->timer == 10000) break;
+    }
       }
       printf("Salio del while\n" );
       print_final_stats(mlfq);
     }
+
+
+
      else if (strcmp(version, "v2") == 0){
         if (!argv[5]){
             printf("Falta argumento para el S\n");
             return 1;
         }
-            
        int s = atoi(argv[5]);
        int time_to_reset = s;
       printf("Ejecutando version 2\n");
+
+
       while (true){
         check_entry_times(mlfq);
-        if (mlfq->executing_proc == NULL) {
-            printf("No encontro procesos..");
-            break;
+        if (mlfq->executing_proc == NULL){
+            mlfq->timer++;
+            //count_waitings(mlfq);
         }
-
+        else {
         decrement_counters(mlfq, &queue_signal);
         count_waitings(mlfq);
         switch (queue_signal) {
@@ -107,28 +113,26 @@ int main(int argc, char *argv[]){
         time_to_reset--;
 
         if (mlfq->timer == 10000) break;
+        }
       }
       print_final_stats(mlfq);
      }
-    else if (strcmp(version, "v2") == 0){
-      printf("Ejecutando version3\n");
+    else if (strcmp(version, "v3") == 0){
         if (!argv[5]){
             printf("Falta argumento para el S\n");
             return 1;
         }
-            
        int s = atoi(argv[5]);
        int time_to_reset = s;
+      printf("Ejecutando version 3\n");
 
-       //Ajustando quantums
-       ajustar_quantum_v3(mlfq);
+      ajustar_quantum_v3(mlfq);
       while (true){
         check_entry_times(mlfq);
-        if (mlfq->executing_proc == NULL) {
-            printf("No encontro procesos..");
-            break;
+        if (mlfq->executing_proc == NULL){
+            mlfq->timer++;
         }
-
+        else {
         decrement_counters(mlfq, &queue_signal);
         count_waitings(mlfq);
         switch (queue_signal) {
@@ -160,10 +164,12 @@ int main(int argc, char *argv[]){
             time_to_reset=s;
         }
         time_to_reset--;
+
         if (mlfq->timer == 10000) break;
+        }
       }
       print_final_stats(mlfq);
-        }
+     }
 
     
 
@@ -213,7 +219,7 @@ Process* crear_proceso(char string[], int PID){
         // Segundo elemento es T
         else if (i == 1) {
             T = atoi(ch);
-            proceso->entry_time = T;
+            proceso->entry_time = T-1;
         }
         // Tercer elemento es N
         else if (i == 2) {
@@ -327,7 +333,7 @@ void check_entry_times(MLFQ* mlfq) {
     for (int i=0; i < mlfq->procs->count; i++){
         p = arraylist_get(mlfq->procs, i);
         if (p->entry_time == mlfq->timer){
-            printf("Entro proceso %s en tiempo %d\n", p->nombre, mlfq->timer);
+            printf("Entro proceso %s en tiempo %d\n", p->nombre, mlfq->timer+1);
             entra_proceso(p, mlfq, 0, true);
         }
     }
@@ -406,7 +412,7 @@ void update_queue(MLFQ* mlfq, bool downgrade) {
 void finish_process(MLFQ* mlfq) {
     int index = mlfq->executing_proc->cola;
     Process* p = linkedlist_delete(&(mlfq->queues[index]), 0);
-    p->finish_time=mlfq->timer+1;
+    p->finish_time=mlfq->timer;
     p->estado=3;
     printf("El proceso %s ha terminado (FINISHED)\n", p->nombre);
     arraylist_append(mlfq->finished_procs, p);
@@ -416,7 +422,7 @@ void finish_process(MLFQ* mlfq) {
 //Imprime datos finales solicitados
 void print_final_stats(MLFQ* mlfq){
     printf("Procesos terminados: %i\n", mlfq->finished_procs->count);
-    printf("Tiempo Total: %i\n", mlfq->timer);
+    printf("Tiempo Total: %i\n", mlfq->timer+1);
     printf("\n");
     int p;
 
@@ -447,7 +453,7 @@ void count_waitings(MLFQ* mlfq){
         }
         if (!(proceso->estado==3)){
             proceso->finish_time++;
-            proceso->response_time++;
+            //proceso->response_time++;
         }
 }
 }
