@@ -1,0 +1,163 @@
+==17682== Memcheck, a memory error detector
+==17682== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==17682== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
+==17682== Command: ./t1
+==17682== Parent PID: 5416
+==17682== 
+--17682-- 
+--17682-- Valgrind options:
+--17682--    --leak-check=full
+--17682--    --show-leak-kinds=all
+--17682--    --track-origins=yes
+--17682--    --verbose
+--17682--    --log-file=valgrind-out.txt
+--17682-- Contents of /proc/version:
+--17682--   Linux version 4.4.0-116-generic (buildd@lgw01-amd64-021) (gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.9) ) #140-Ubuntu SMP Mon Feb 12 21:23:04 UTC 2018
+--17682-- 
+--17682-- Arch and hwcaps: AMD64, LittleEndian, amd64-cx16-lzcnt-rdtscp-sse3-avx-avx2-bmi
+--17682-- Page sizes: currently 4096, max supported 4096
+--17682-- Valgrind library directory: /usr/lib/valgrind
+--17682-- Reading syms from /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1
+--17682-- Reading syms from /lib/x86_64-linux-gnu/ld-2.23.so
+--17682--   Considering /lib/x86_64-linux-gnu/ld-2.23.so ..
+--17682--   .. CRC mismatch (computed aa979a42 wanted 9019bbb7)
+--17682--   Considering /usr/lib/debug/lib/x86_64-linux-gnu/ld-2.23.so ..
+--17682--   .. CRC is valid
+--17682-- Reading syms from /usr/lib/valgrind/memcheck-amd64-linux
+--17682--   Considering /usr/lib/valgrind/memcheck-amd64-linux ..
+--17682--   .. CRC mismatch (computed eea41ea9 wanted 2009db78)
+--17682--    object doesn't have a symbol table
+--17682--    object doesn't have a dynamic symbol table
+--17682-- Scheduler: using generic scheduler lock implementation.
+--17682-- Reading suppressions file: /usr/lib/valgrind/default.supp
+==17682== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-17682-by-matias-on-???
+==17682== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-17682-by-matias-on-???
+==17682== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-17682-by-matias-on-???
+==17682== 
+==17682== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==17682== don't want to do, unless you know exactly what you're doing,
+==17682== or are doing some strange experiment):
+==17682==   /usr/lib/valgrind/../../bin/vgdb --pid=17682 ...command...
+==17682== 
+==17682== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==17682==   /path/to/gdb ./t1
+==17682== and then give GDB the following command
+==17682==   target remote | /usr/lib/valgrind/../../bin/vgdb --pid=17682
+==17682== --pid is optional if only one valgrind process is running
+==17682== 
+--17682-- REDIR: 0x401cfd0 (ld-linux-x86-64.so.2:strlen) redirected to 0x3809e181 (???)
+--17682-- Reading syms from /usr/lib/valgrind/vgpreload_core-amd64-linux.so
+--17682--   Considering /usr/lib/valgrind/vgpreload_core-amd64-linux.so ..
+--17682--   .. CRC mismatch (computed 2567ccf6 wanted 49420590)
+--17682--    object doesn't have a symbol table
+--17682-- Reading syms from /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so
+--17682--   Considering /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so ..
+--17682--   .. CRC mismatch (computed 0e27c9a8 wanted ac585421)
+--17682--    object doesn't have a symbol table
+==17682== WARNING: new redirection conflicts with existing -- ignoring it
+--17682--     old: 0x0401cfd0 (strlen              ) R-> (0000.0) 0x3809e181 ???
+--17682--     new: 0x0401cfd0 (strlen              ) R-> (2007.0) 0x04c31020 strlen
+--17682-- REDIR: 0x401b920 (ld-linux-x86-64.so.2:index) redirected to 0x4c30bc0 (index)
+--17682-- REDIR: 0x401bb40 (ld-linux-x86-64.so.2:strcmp) redirected to 0x4c320d0 (strcmp)
+--17682-- REDIR: 0x401dd30 (ld-linux-x86-64.so.2:mempcpy) redirected to 0x4c35270 (mempcpy)
+--17682-- Reading syms from /lib/x86_64-linux-gnu/libc-2.23.so
+--17682--   Considering /lib/x86_64-linux-gnu/libc-2.23.so ..
+--17682--   .. CRC mismatch (computed 7a8ee3e4 wanted a5190ac4)
+--17682--   Considering /usr/lib/debug/lib/x86_64-linux-gnu/libc-2.23.so ..
+--17682--   .. CRC is valid
+--17682-- REDIR: 0x4ec9a00 (libc.so.6:strcasecmp) redirected to 0x4a286f0 (_vgnU_ifunc_wrapper)
+--17682-- REDIR: 0x4ec5280 (libc.so.6:strcspn) redirected to 0x4a286f0 (_vgnU_ifunc_wrapper)
+--17682-- REDIR: 0x4ecbcf0 (libc.so.6:strncasecmp) redirected to 0x4a286f0 (_vgnU_ifunc_wrapper)
+--17682-- REDIR: 0x4ec76f0 (libc.so.6:strpbrk) redirected to 0x4a286f0 (_vgnU_ifunc_wrapper)
+--17682-- REDIR: 0x4ec7a80 (libc.so.6:strspn) redirected to 0x4a286f0 (_vgnU_ifunc_wrapper)
+--17682-- REDIR: 0x4ec914b (libc.so.6:memcpy@GLIBC_2.2.5) redirected to 0x4a286f0 (_vgnU_ifunc_wrapper)
+--17682-- REDIR: 0x4ec7400 (libc.so.6:rindex) redirected to 0x4c308a0 (rindex)
+--17682-- REDIR: 0x4ebe130 (libc.so.6:malloc) redirected to 0x4c2db20 (malloc)
+--17682-- REDIR: 0x4ebe4f0 (libc.so.6:free) redirected to 0x4c2ed80 (free)
+--17682-- REDIR: 0x4ec3ab0 (libc.so.6:__GI_strchr) redirected to 0x4c30a00 (__GI_strchr)
+--17682-- REDIR: 0x4ec5160 (libc.so.6:strcpy) redirected to 0x4a286f0 (_vgnU_ifunc_wrapper)
+--17682-- REDIR: 0x4edf9d0 (libc.so.6:__strcpy_sse2_unaligned) redirected to 0x4c31040 (strcpy)
+--17682-- REDIR: 0x4ec3cd0 (libc.so.6:strcmp) redirected to 0x4a286f0 (_vgnU_ifunc_wrapper)
+--17682-- REDIR: 0x4ed9570 (libc.so.6:__strcmp_sse2_unaligned) redirected to 0x4c31f90 (strcmp)
+==17682== Invalid read of size 1
+==17682==    at 0x4ED9570: __strcmp_sse2_unaligned (strcmp-sse2-unaligned.S:24)
+==17682==    by 0x400AD5: main (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==  Address 0x0 is not stack'd, malloc'd or (recently) free'd
+==17682== 
+==17682== 
+==17682== Process terminating with default action of signal 11 (SIGSEGV)
+==17682==  Access not within mapped region at address 0x0
+==17682==    at 0x4ED9570: __strcmp_sse2_unaligned (strcmp-sse2-unaligned.S:24)
+==17682==    by 0x400AD5: main (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==  If you believe this happened as a result of a stack
+==17682==  overflow in your program's main thread (unlikely but
+==17682==  possible), you can try to increase the size of the
+==17682==  main thread stack using the --main-stacksize= flag.
+==17682==  The main thread stack size used in this run was 8388608.
+==17682== 
+==17682== HEAP SUMMARY:
+==17682==     in use at exit: 5,384 bytes in 7 blocks
+==17682==   total heap usage: 8 allocs, 1 frees, 5,936 bytes allocated
+==17682== 
+==17682== Searching for pointers to 7 not-freed blocks
+==17682== Checked 61,192 bytes
+==17682== 
+==17682== 0 bytes in 1 blocks are still reachable in loss record 1 of 7
+==17682==    at 0x4C2DB8F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==17682==    by 0x401034: mlfq_init (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==    by 0x400AB1: main (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682== 
+==17682== 16 bytes in 1 blocks are still reachable in loss record 2 of 7
+==17682==    at 0x4C2DB8F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==17682==    by 0x402106: arraylist_init (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==    by 0x401307: get_procesos (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==    by 0x400FFA: mlfq_init (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==    by 0x400AB1: main (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682== 
+==17682== 16 bytes in 1 blocks are still reachable in loss record 3 of 7
+==17682==    at 0x4C2DB8F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==17682==    by 0x402106: arraylist_init (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==    by 0x40100E: mlfq_init (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==    by 0x400AB1: main (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682== 
+==17682== 48 bytes in 1 blocks are still reachable in loss record 4 of 7
+==17682==    at 0x4C2DB8F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==17682==    by 0x400FEA: mlfq_init (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==    by 0x400AB1: main (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682== 
+==17682== 312 bytes in 1 blocks are definitely lost in loss record 5 of 7
+==17682==    at 0x4C2DB8F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==17682==    by 0x4010F7: crear_proceso (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==    by 0x401325: get_procesos (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==    by 0x400FFA: mlfq_init (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==    by 0x400AB1: main (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682== 
+==17682== 2,496 bytes in 1 blocks are still reachable in loss record 6 of 7
+==17682==    at 0x4C2DB8F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==17682==    by 0x402129: arraylist_init (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==    by 0x401307: get_procesos (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==    by 0x400FFA: mlfq_init (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==    by 0x400AB1: main (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682== 
+==17682== 2,496 bytes in 1 blocks are still reachable in loss record 7 of 7
+==17682==    at 0x4C2DB8F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==17682==    by 0x402129: arraylist_init (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==    by 0x40100E: mlfq_init (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==    by 0x400AB1: main (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682== 
+==17682== LEAK SUMMARY:
+==17682==    definitely lost: 312 bytes in 1 blocks
+==17682==    indirectly lost: 0 bytes in 0 blocks
+==17682==      possibly lost: 0 bytes in 0 blocks
+==17682==    still reachable: 5,072 bytes in 6 blocks
+==17682==         suppressed: 0 bytes in 0 blocks
+==17682== 
+==17682== ERROR SUMMARY: 2 errors from 2 contexts (suppressed: 0 from 0)
+==17682== 
+==17682== 1 errors in context 1 of 2:
+==17682== Invalid read of size 1
+==17682==    at 0x4ED9570: __strcmp_sse2_unaligned (strcmp-sse2-unaligned.S:24)
+==17682==    by 0x400AD5: main (in /home/matias/Documents/Universidad/VII-Semestre/IIC2333/Tareas-SO/T1/t1)
+==17682==  Address 0x0 is not stack'd, malloc'd or (recently) free'd
+==17682== 
+==17682== ERROR SUMMARY: 2 errors from 2 contexts (suppressed: 0 from 0)

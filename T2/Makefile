@@ -1,9 +1,9 @@
 CC=gcc
 CFLAGS=-c -Wall -I.
 LDFLAGS= 
-SOURCES=mlfq.c linkedlist.c arraylist.c
+SOURCES=p2.c
 OBJECTS=$(SOURCES:.c=.o)
-EXECUTABLE=t1
+EXECUTABLE=t2p2
 
 all: $(SOURCES) $(EXECUTABLE)
     
