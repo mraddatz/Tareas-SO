@@ -1,0 +1,3 @@
+ls -al
+echo something
+ps T

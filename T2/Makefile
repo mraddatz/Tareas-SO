@@ -1,14 +1,2 @@
-CC=gcc
-CFLAGS=-c -Wall -I.
-LDFLAGS= 
-SOURCES=mlfq.c linkedlist.c arraylist.c
-OBJECTS=$(SOURCES:.c=.o)
-EXECUTABLE=t1
-
-all: $(SOURCES) $(EXECUTABLE)
-    
-$(EXECUTABLE): $(OBJECTS) 
-	$(CC) $(LDFLAGS) $(patsubst %,obj/%,$^) -o $@
-
-.c.o:
-	$(CC) $(CFLAGS) $< -o obj/$@
+program 1: p1.c
+	gcc -o doer p1.c
