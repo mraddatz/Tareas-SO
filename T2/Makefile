@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-c -Wall -I.
 LDFLAGS= 
-SOURCES=p2.c
+SOURCES=p2.c structs.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=t2p2
 
