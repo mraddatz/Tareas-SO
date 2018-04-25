@@ -26,6 +26,7 @@ int main(int argc, char *argv[]){
 		size_t bufsize = 0;
 		ssize_t length;
 		length = getline(&buffer, &bufsize, file_pointer);
+		//length es -1 cuando no quedan lineas
 		while (length > 0){
 		//printf("%zi\n", length);	
 		//printf("%s\n", buffer);
@@ -33,50 +34,20 @@ int main(int argc, char *argv[]){
 		if (actual_procces==n){
 			//printf("%s\n", "esperar alguno");
 			//Espera a cualquier hijo que termine, luego continuo
-			wait(NULL);
+			//wait(NULL);
 			actual_procces--;
 		}
 		actual_procces++;
-		int child_pid = fork();
-		 if (child_pid==0){
+		//int child_pid = fork();
+		 //if (child_pid==0){
 		 	//printf("%s\n", "Soy Hijo!");
-
 		 	char *argvn[64]; //Argumentos, linea en Buffer
 		 	//Parse separa por espacios y lo deja en argv
-		 	//printf("El string que tengo que leer es %s\n", buffer);
-
-		 	
 			buffer[strlen(buffer) - 1] = 0;
-		 	//printf("El nuevo string que tengo que leer es %s\n", buffer);
-
 		 	parse(buffer, argvn);
 
-		 	       /*   parse the line               */
-		 	//execvp recibe parametros al igual que la consola, primer argumento es el file y segundo los argumentos de este
-		 	//int  main(int argc, char **argv)
-		 	int element;
-		 	for (element=0; element<5; element++){
-	 			printf("%s\n", argvn[element]);
-
-		 	}
-
-
-
-
-		 	//printf("ejecutando %s %s %s\n", argvn[0], argvn[1], argvn[2]);
 		 	execute(argvn);
-		 	//	printf("Fallo la ejecucion de %s\n", buffer);
-		 	//}
-		 	break;
-		 }
-
-
-
-		  //char**ar=arguments_array(buffer);
-
-
-
-
+		 	//wait(NULL);
 
 
 
@@ -84,7 +55,7 @@ int main(int argc, char *argv[]){
 
 		}
 		
-
+		sleep(1);
 }
 
 
@@ -110,10 +81,7 @@ void  parse(char *line, char **argv)
 {	
 	int comillas = 0;
      while (*line != '\0') {       /* if not the end of line ....... */ 
-			//if (comillas % 2 == 0){
-          while (*line == ' ' || *line == '\t' || *line == '\n'){
-          		//if (comillas % 2==0){
-          			//*line++ = '\0';
+          while (*line == ' ' || *line == '\t' || *line == '\n'){          			//*line++ = '\0';
           			if (comillas%2==0){
           				*line++ = '\0';
           			}
@@ -123,22 +91,27 @@ void  parse(char *line, char **argv)
           		//}
 
           }
-      //}
-          if (comillas%2==0){
-          *argv++ = line;          /* save the argument position     */
-          }
-          if (primero_comilla(line)){
-               	comillas++;
+      	printf("%s\n", line);
+          if (comillas%2==0 && primero_comilla(line)){
+          	line++;
+          *argv++ = line;
+          comillas++;          /* save the argument position     */
+          } else if (comillas%2==0){
+               	*argv++ = line;
                }   /* replace white spaces with 0    */
 
 
           while (*line != '\0' && *line != ' ' && 
                  *line != '\t' && *line != '\n'){
-               line++;
+               //line++;
            		char elemento = line[0];
 				char comilla = '\"';
 				if (elemento==comilla){
+					*line++ = '\0';
 					comillas++;
+				}
+				else{
+					line++;
 				}
           }
      }
@@ -156,12 +129,6 @@ void  execute(char **argv)
           exit(1);
      }
      else if (pid == 0) {          /* for the child process:         */
-     		printf("Creando hijo \n" );
-     		int element;
-		 	for (element=0; element<5; element++){
-	 			printf("%s\n", argv[element]);
-
-		 	}
           if (execvp(*argv, argv) < 0) {     /* execute the command  */
                printf("*** ERROR: exec failed\n");
                exit(1);
@@ -174,7 +141,6 @@ void  execute(char **argv)
 }
 
 int primero_comilla(char *str){
-	//printf("Probando de %s tiene comillas\n", str);
 	char primer_elemento;
 	primer_elemento = *str;
 	char comilla = '\"';
