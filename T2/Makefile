@@ -1,14 +1,14 @@
 CC=gcc
 CFLAGS=-c -Wall -I.
-LDFLAGS= 
-SOURCES=p2.c structs.c
+LDFLAGS= -lm
+SOURCES=p2.c structs.c optimize.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=t2p2
 
 all: $(SOURCES) $(EXECUTABLE)
     
 $(EXECUTABLE): $(OBJECTS) 
-	$(CC) $(LDFLAGS) $(patsubst %,obj/%,$^) -o $@
+	$(CC)  $(patsubst %,obj/%,$^) -o $@ $(LDFLAGS)
 
 .c.o:
 	$(CC) $(CFLAGS) $< -o obj/$@
