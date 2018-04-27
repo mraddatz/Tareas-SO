@@ -1,4 +1,3 @@
 ls -al
 echo something
-ps T
 date "+DATE: %Y-%m-%d%nTIME: %H:%M:%S"
