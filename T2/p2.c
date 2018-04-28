@@ -25,66 +25,105 @@ int main(int argc, char *argv[]){
     }
     printf("\nMemoria usada: %d bits\n", size[-1]);
 
+    // Crear Memoria
+    Memory* mem = memory_init();
+
+    // Crear TLB
+    TLB* tlb = tlb_init();
+
+    // Crear Page Directory inicial
+    PageDirectory* pd = page_directory_init(1, size);
+
     char* filename = argv[2];
     char* file_buffer = get_buffer(filename);
 
+    char* disk_buffer = (char*)malloc(FRAM_SIZE * sizeof(char));
+
     char* ch;
-    int addr;
+    char* dato;
+    int start = 8; // Quitar el offset
+    unsigned addr;
+    unsigned offset;
+    unsigned addr_wo_offset; // address without offset
+    unsigned tlb_frame;
+    unsigned pt_frame;
+
+    void* current_table; // La tabla de cada iteracion
+    current_table = pd;
+
     while ((ch = strsep(&file_buffer,"\n")) != NULL) {
         addr = atoi(ch);
-        int desglose[5]; // Desglose de la direccion
-        int start = 8;
-        int offset = get_n_bits(addr, 8, 0);
+        unsigned addresses[5] = {0}; // Desglose de la direccion
+        offset = get_n_bits(addr, OFFS_SIZE, 0);
+        addr_wo_offset = get_n_bits(addr, ADDR_SIZE - OFFS_SIZE, OFFS_SIZE);
         for (int i=4; i>=0; i--){ // Obtener desglose
-            desglose[i] = get_n_bits(addr, size[i], start);
+            addresses[i] = get_n_bits(addr, size[i], start);
             start += size[i];
+        }
+        // Incrementar todos los timestamps
+        tlb_incr_timestamps(tlb);
+        mem_incr_timestamps(mem);
+
+        tlb_frame = tlb_get_frame(tlb, addr_wo_offset);
+        
+        if (tlb_frame == TLB_MISS) { // Ir a buscarlo a la page table
+            for (int nivel=1; nivel < niveles; nivel++) {
+                if (nivel == niveles-1) { // Entra a Page Table 
+                    PTE* pte = ((PageTable*)current_table)->entries[addresses[nivel]];
+                    pt_frame = page_table_get_frame(current_table, addresses[nivel]);
+                    if (pt_frame == PAGE_FAULT) { // Ir al disco
+                        read_disk(&disk_buffer, addr - offset); // Para que quede de 28 bits
+                        if (mem->is_full) { // Memoria llena
+                            swap(mem, disk_buffer, pte);
+                            tlb_set(tlb, addr_wo_offset, pte->frame);
+                        }
+                        else { // Memoria no llena
+                            for (int i=0; i < RAM_SIZE; i++) {
+                                ME* me = mem->frames[i];
+                                if (me->data == NULL) { // Entrada vacia
+                                    pte->frame = i; // Marcar la page table entry
+                                    pte->obsol_bit = true; 
+
+                                    // me->referrer->obsol_bit = false; // Indicar que ya no apunta al dato que apuntaba antes
+                                    me->data = disk_buffer;
+                                    me->referrer = pte;
+
+                                    if (i == RAM_SIZE - 1) mem->is_full = true; // Se lleno la memoria
+                                    tlb_set(tlb, addr_wo_offset, i);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else { // Frame obtenido de page table
+                        printf("Page table hit\n");
+                        dato = mem_get_data(mem, pt_frame);
+                        printf("Dato: %d\n", dato[offset]);
+
+                    }
+                }
+                else { // Entra a page directory
+                    PDE* pde = pd->entries[addresses[nivel]];
+                    if (pde->ptr == NULL) { // Si no ha sido inicializada
+                        if (nivel == niveles - 2) pde->ptr = page_table_init(nivel, size);
+                        else pde->ptr = page_table_init(nivel, size);
+                    }
+                    current_table = pde->ptr;
+                }
+            }
+        }
+        else { // Frame obtenido de la TLB
+            printf("TLB hit\n");
+            dato = mem_get_data(mem, tlb_frame);
+            printf("Dato: %d\n", dato[offset]);
         }
     }
 
-    int desglose[5]; // Desglose de la direccion
-    int start = 8;
-    int offset = get_n_bits(123456789, 8, 0);
-    for (int i=4; i>=0; i--){ // Obtener desglose
-        desglose[i] = get_n_bits(123456789, size[i], start);
-        start += size[i];
-    }
-    printf("Offset: %d\n", offset);
-    printf("Desglose por nivel: ");
-    for (int i=0; i < 5; i++) {
-        if (desglose[i] != 0) printf("%d ", desglose[i]);
-    }
-    printf("\n");
-
-
-
+    // Liberar memoria
     free(file_buffer);
-    char* buffer = (char*)malloc(FRAM_SIZE * sizeof(char));
-    read_disk(&buffer, 0);
-
-    TLB* tlb = tlb_init();
-    printf("TLB creada\n");
-    printf("Clock de tlb: %d\n", tlb->clock);
-    printf("Timestamp de primera TLBE: %d\n", tlb->entries[0].timestamp);
-
-    PageDirectory* pd = page_directory_init(1, size);
-    printf("Page directory creada\n");
-    printf("Page del tercer PDE: %d\n", pd->entries[2].page);
-
-    PageTable* pt = page_table_init(1, size);
-    printf("Page table creada\n");
-    printf("Page del segundo PTE: %d\n", pt->entries[1].page);
-
-    free(buffer);
+    free(disk_buffer);
 }
 
-// unsigned int_to_bin(unsigned k) {
-//     if (k == 0) return 0;
-//     return (k % 2) + 10 * int_to_int(k / 2);
-// }
-
-// unsigned* parse_int(unsigned n) {
-//     unsigned bin = int_to_bin(n);
-// }
 
 // Retorna n bits de num partiendo desde start (0-index, derecha a izq)
 unsigned get_n_bits(unsigned num, unsigned n, unsigned start) {
@@ -107,29 +146,21 @@ int read_disk(char* buffer[], unsigned addr) {
         return 1;
     }
 
-    // printf("\n File opened successfully through fopen()\n");
-
     if(0 != fseek(arch, addr, SEEK_SET))
     {
         printf("\n fseek() failed\n");
         return 1;
     }
 
-    // printf("\n fseek() successful\n");
-
     if(FRAM_SIZE != fread(buff, 1, FRAM_SIZE, arch)) {
         printf("\n fread() failed\n");
         return 1;
     }
 
-    // printf("\n Some bytes successfully read through fread()\n");
-
-    //printf("The bytes read are [%s]\nAnd has size: %lu\n",buff, sizeof(buff));
+    // printf("The bytes read are [%s]\nAnd has size: %lu\n",buff, sizeof(buff));
 
     fclose(arch);
     strcpy(*buffer, buff);
-
-    // printf("\n File stream closed through fclose()\n");
 
     return 0;
 }
