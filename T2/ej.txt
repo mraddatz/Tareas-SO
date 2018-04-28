@@ -1,3 +1,5 @@
 ls -al
+wena chatumare
 echo something
 date "+DATE: %Y-%m-%d%nTIME: %H:%M:%S"
+ps T

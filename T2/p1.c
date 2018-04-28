@@ -1,3 +1,5 @@
+#include <time.h>
+#include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,9 +7,7 @@
 //#include <signal.h>
 // #include <sys/types.h>
 #include <sys/wait.h>
-
 char **arguments_array(char* string);
-void  execute(char **argv);
 void  parse(char *line, char **argv);
 int primero_comilla(char *str);
 int process_count(char *file);
@@ -18,12 +18,18 @@ typedef struct process
     int id;
     int status;
     int intentos;
+    int waited;
     int exit_code;
+    int link[2];
+    char foo[4096];
 } Process;
 
+char* execute(Process*proc);
 Process* process_creator(char** av);
 void process_finish(Process*p);
 Process** crear_cola_procesos(int amount, char *filename);
+int terminado(int cantidad_procesos, Process** cola_procesos);
+#define die(e) do { fprintf(stderr, "%s\n", e); exit(EXIT_FAILURE); } while (0);
 
 //File and number of simultaneus process
 //argc cantidad de argumentos, argv 
@@ -35,11 +41,9 @@ int main(int argc, char *argv[]){
 	printf("Cantidad de procesos: %i\n", process_amount);
 	int n = atoi(argv[2]);
 	int actual_procces = 0;
-	//Process**cola_procesos = crear_cola_procesos(process_amount, argv[1]);
+	Process**cola_procesos = crear_cola_procesos(process_amount, argv[1]);
 
 	Process**procesos = (Process**) calloc((process_amount) , sizeof(Process*));
-
-	//printf("proceso 0: %s\n", cola_procesos[0]->argv[0]);
 		//&variable: retorna puntero a esa variable
 		//Linea se guarda en buffer
 		char* buffer = NULL;
@@ -47,94 +51,71 @@ int main(int argc, char *argv[]){
 		ssize_t length;
 		length = getline(&buffer, &bufsize, file_pointer);
 		int counter=0;
-
-		while (length > -1){
+		//while (length > -1){
 		if (strchr (buffer, '\n') != NULL ){buffer[strlen(buffer) - 1] = 0;}
 		char**arg=(char**) calloc((64) , sizeof(char*));
-		printf("Antes de parse:\n");
-		int e;
-		for (e=0; e<5; e++){
-			printf("%s\n", arg[e]);
-		}	
 		parse(buffer, arg);
-		printf("DEspues de parse:\n");
-		char* string;
-		for (e=0; e<5; e++){
-			strcpy(string, arg[e]);
-			printf("%s\n", string);
-
-		}
-
-		//char**arg_copiado;
-		//strcpy(arg_copiado,arg);
-		procesos[counter]=process_creator(arg);
-
-		printf("Printing arvn de todos los procesos con counter: %d\n", counter);
-		int j;
+		int mem_proceso =0;
+		Process* proc =  cola_procesos[mem_proceso];
+		int status;
 		int i;
-		for (j=0; j<counter+1; j++){
-			//printf("Argvn en direccion %d\n", *cola_procesos[j]->argv);
-		for (i=0; i<5; i++){
-
-			printf("arg proceso (%d) argv (%d): %s\n", j, i, procesos[j]->argv[i]);
-		}			
-		}
-
-		counter++;
-		length = getline(&buffer, &bufsize, file_pointer);
-
-		}
-
-		int i;
-		int j;
-
-		//for (i=0; i<process_amount; i++){
-		//	for (j=0; j<5; j++){
-		//		printf("%s\n", "unoo");
-		//		printf("%s\n",procesos[i]->argv[j]);
-		//	}
-		//}
-
-
+		int procesos_actuales = 0;
+		int iteracion = 1;
 		//length es -1 cuando no quedan lineas
 		while (finished_process < process_amount){
-			//if (strchr (buffer, '\n') != NULL ){buffer[strlen(buffer) - 1] = 0;}
-			//if (actual_procces==n){
-			//	printf("Esta Esperando\n" );
-			//	sleep(10);
-			//	wait(NULL);
-			//	actual_procces--;
-			//	printf("Dejo de esperar\n");
-			//}
-			//else{
-			//	actual_procces++;
-			
-		 	//char *argvn[64]; //Argumentos, linea en Buffer
-		 	//Parse separa por espacios y lo deja en argv
+		Process* proc =  cola_procesos[mem_proceso];
+		printf("Comenzando proceso!: %d\n", proc->status);
 
+			if (procesos_actuales==n){
+				int proceso_wait = wait(&status);
+				for (i=0; i<process_amount; i++){
+					Process* p=cola_procesos[i];
+					if (p->id==proceso_wait){
+						p->waited = 1;
+						p->status = WEXITSTATUS(status);
+						printf("Actualizando status proceso: %d a %d\n", p->id, p->status);
+					}
+				}
+				procesos_actuales--;
+			}
 
-		 	//parse(buffer, argvn);
-			//Process** proc= cola_procesos[finished_process];
-			//printf("Argumento del proceso%s\n", proc->argv[0]);
-			//printf("process argv: %c\n", *proc->argv[0]);
-
-		 	//proc1.argv=&argvn;
-		 	//printf("Estado Inicial: %d\n", proc->status);
-		 	//execute(proc->argv);
-		 	//wait(&proc->status);
-		 	//printf("status: %i\n", proc->status);
-		 	//printf("Estado Final: %d\n", proc->status);
-		 	//wait(NULL);
-		 	//}
-
-
+			procesos_actuales++;
+			proc->intentos++;
+		 	execute(proc);
+		 	int status;
+		 	close(proc->link[1]);
+			int nbytes = read(proc->link[0], proc->foo, sizeof(proc->foo));
+			mem_proceso++;
 			finished_process++;
 		 //Lee una nueva linea y vuelve al while
 		//length = getline(&buffer, &bufsize, file_pointer);
+		}//termino del while
+		//Esperar al resto de los procesos
+		for (i=0; i<process_amount; i++){
+			Process* proc3=cola_procesos[i];
+			printf("Process id: %d\n", proc3->id);
+			if (proc3->waited == 0){
+				waitpid(proc3->id,&status,0);
+				proc3->status=WEXITSTATUS(status);
+			}
+		}
+		int resp;
+
+		resp = terminado(process_amount, cola_procesos);
+		printf("Termino\n");
+		int e;
+
+		for(e=0; e<process_amount; e++){
+			Process* proc2 = cola_procesos[e];
+			printf("----Nuevo PROCESO----\n" );
+			printf("Output: %s\n", proc2->foo);
+			printf("ID: %d\n", proc2->id);
+
+			printf("ExitCode: %d\n", proc2->status);
+			//printf("Status: %d\n", proc2->status);
+			printf("Intentos: %d\n", proc2->intentos);
 		}
 		
-		
-		printf("Termino\n");
 }
 
 
@@ -197,20 +178,27 @@ void  parse(char *line, char **argv)
 }
 
 
-void  execute(char **argv)
+char*  execute(Process*proc)
 {
      pid_t  pid;
      int    status;
-
-     if ((pid = fork()) < 0) {     /* fork a child process           */
+	if (pipe(proc->link)==-1)
+		die("pipe");
+     if ((proc->id = fork()) < 0) {     /* fork a child process           */
           printf("*** ERROR: forking child process failed\n");
+          die("fork")
           exit(1);
      }
-     else if (pid == 0) {         /* for the child process:         */
+     else if (proc->id == 0) {         /* for the child process:         */
      printf("---------Inicio Proceso Hijo-----------\n" );
-     printf("comando: %s\n", *argv);
-          if (execvp(*argv, argv) < 0) {     /* execute the command  */
+     printf("comando: %s\n", *proc->argv);
+     dup2 (proc->link[1], STDOUT_FILENO);
+		 close(proc->link[0]);
+		 close(proc->link[1]);
+          if (execvp(*proc->argv, proc->argv) < 0) {     /* execute the command  */
                printf("*** ERROR: exec failed\n");
+               die("execvp");
+
                exit(1);
           }
      }
@@ -218,6 +206,12 @@ void  execute(char **argv)
           //while (wait(&status) != pid)       /* wait for completion  */
      	printf("Soy unico padre\n" );;
      }
+
+     char* retornar;
+     retornar = "hola";
+
+     printf("Fin de execute:\n");
+     return retornar;
 }
 
 int primero_comilla(char *str){
@@ -245,6 +239,7 @@ Process* process_creator(char**argv){
 	proc->status=1;
 	proc->intentos=0;
 	proc->id=0;
+	proc->waited=0;
 	proc->exit_code=0;
   return proc;
 }
@@ -278,56 +273,35 @@ Process** crear_cola_procesos(int amount, char *filename)
 	size_t bufsize = 0;
 	ssize_t length;
 	int counter=0;
+	char*lineas=(char*) calloc((100) , sizeof(char[100]));
 	length = getline(&buffer, &bufsize, file_pointer);
+	int c;
+	c = 0;
+
 	while (length > 0){
 		if (strchr (buffer, '\n') != NULL ){buffer[strlen(buffer) - 1] = 0;}
+		strcpy(&lineas[c] , buffer);
 		char**argvn=(char**) calloc((64) , sizeof(char*));
-		printf("Creando proceso %d\n", counter);
-		int i;
-		parse(buffer, argvn);
-
-		printf("Printing arvn del buffer:\n");
-		for (i=0; i<5; i++){
-			printf("arg: %s\n", argvn[i]);
-		}
+		parse(&lineas[c], argvn);
 		Process* proc= process_creator(argvn);
-		printf("Printing arvn del proceso:\n");
 
-		for (i=0; i<5; i++){
-			printf("arg: %s\n", proc->argv[i]);
-			//printf("direccion argvn %i\n", proc->argv);
-		}
-		proc->id=counter;
+		//proc->id=counter;
 		cola_procesos[counter] = proc;
-		printf("Printing arvn de todos los procesos con counter: %d\n", counter);
-		int j;
-		for (j=0; j<counter+1; j++){
-			//printf("Argvn en direccion %d\n", *cola_procesos[j]->argv);
-		for (i=0; i<5; i++){
-
-			printf("arg proceso (%d) argv (%d): %s\n", j, i, cola_procesos[j]->argv[i]);
-		}			
-		}
-
-		counter++;
+		c=c+sizeof(char[100]);
 		length = getline(&buffer, &bufsize, file_pointer);
-		
+		counter=counter+1;
 
 	}
-	//free(buffer);
-	//fclose(file_pointer);
-		//int o;
-		//for (o=counter; o>0; o--){
-	//		printf("%d\n", cola_procesos[o]->id);
-	//	}
-	printf("Wenoo: %d\n", cola_procesos[1]->id);
-	int e;
-	//or (e=amount; e>0; e--){
-	//	printf("string: %d\n", cola_procesos[e]->id);
-	//	printf("argv%s\n", cola_procesos[e]->argv[0]);
-	//}
 	return cola_procesos;
 }
 
-
+int terminado(int cantidad_procesos, Process** cola_procesos){
+	printf("Terminado:\n");
+	int e;
+	for (e=0;e<cantidad_procesos; e++){
+		Process* proceso = cola_procesos[e];
+		printf("proc: %d\n", proceso->id);
+	}
+	return 1;
+}
 
