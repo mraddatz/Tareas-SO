@@ -7,7 +7,6 @@
 //#include <signal.h>
 // #include <sys/types.h>
 #include <sys/wait.h>
-char **arguments_array(char* string);
 void  parse(char *line, char **argv);
 int primero_comilla(char *str);
 int process_count(char *file);
@@ -28,7 +27,7 @@ char* execute(Process*proc);
 Process* process_creator(char** av);
 void process_finish(Process*p);
 Process** crear_cola_procesos(int amount, char *filename);
-int terminado(int cantidad_procesos, Process** cola_procesos);
+//int terminado(int cantidad_procesos, Process** cola_procesos);
 #define die(e) do { fprintf(stderr, "%s\n", e); exit(EXIT_FAILURE); } while (0);
 
 //File and number of simultaneus process
@@ -38,12 +37,13 @@ int main(int argc, char *argv[]){
 	file_pointer = fopen(argv[1], "r");
 	int process_amount = process_count(argv[1]);
 	int finished_process =0;
-	printf("Cantidad de procesos: %i\n", process_amount);
+	clock_t begin = clock();
+	struct timeval tvalBefore, tvalAfter;
+	gettimeofday (&tvalBefore, NULL);
 	int n = atoi(argv[2]);
 	int actual_procces = 0;
 	Process**cola_procesos = crear_cola_procesos(process_amount, argv[1]);
-
-	Process**procesos = (Process**) calloc((process_amount) , sizeof(Process*));
+	//Process**procesos = (Process**) calloc((process_amount) , sizeof(Process*));
 		//&variable: retorna puntero a esa variable
 		//Linea se guarda en buffer
 		char* buffer = NULL;
@@ -51,7 +51,6 @@ int main(int argc, char *argv[]){
 		ssize_t length;
 		length = getline(&buffer, &bufsize, file_pointer);
 		int counter=0;
-		//while (length > -1){
 		if (strchr (buffer, '\n') != NULL ){buffer[strlen(buffer) - 1] = 0;}
 		char**arg=(char**) calloc((64) , sizeof(char*));
 		parse(buffer, arg);
@@ -61,11 +60,10 @@ int main(int argc, char *argv[]){
 		int i;
 		int procesos_actuales = 0;
 		int iteracion = 1;
+
 		//length es -1 cuando no quedan lineas
 		while (finished_process < process_amount){
 		Process* proc =  cola_procesos[mem_proceso];
-		printf("Comenzando proceso!: %d\n", proc->status);
-
 			if (procesos_actuales==n){
 				int proceso_wait = wait(&status);
 				for (i=0; i<process_amount; i++){
@@ -73,7 +71,7 @@ int main(int argc, char *argv[]){
 					if (p->id==proceso_wait){
 						p->waited = 1;
 						p->status = WEXITSTATUS(status);
-						printf("Actualizando status proceso: %d a %d\n", p->id, p->status);
+						//printf("Actualizando status proceso: %d a %d\n", p->id, p->status);
 					}
 				}
 				procesos_actuales--;
@@ -87,13 +85,11 @@ int main(int argc, char *argv[]){
 			int nbytes = read(proc->link[0], proc->foo, sizeof(proc->foo));
 			mem_proceso++;
 			finished_process++;
-		 //Lee una nueva linea y vuelve al while
-		//length = getline(&buffer, &bufsize, file_pointer);
 		}//termino del while
 		//Esperar al resto de los procesos
 		for (i=0; i<process_amount; i++){
 			Process* proc3=cola_procesos[i];
-			printf("Process id: %d\n", proc3->id);
+			//printf("Process id: %d\n", proc3->id);
 			if (proc3->waited == 0){
 				waitpid(proc3->id,&status,0);
 				proc3->status=WEXITSTATUS(status);
@@ -101,41 +97,31 @@ int main(int argc, char *argv[]){
 		}
 		int resp;
 
-		resp = terminado(process_amount, cola_procesos);
-		printf("Termino\n");
+		printf("Termino:\n");
+		clock_t end = clock();
+		double time_spent =(double)(end - begin) / CLOCKS_PER_SEC;
+		gettimeofday (&tvalAfter, NULL);
 		int e;
-
+		float time_microseconds = ((tvalAfter.tv_sec - tvalBefore.tv_sec)*1000000L
+           +tvalAfter.tv_usec) - tvalBefore.tv_usec;
 		for(e=0; e<process_amount; e++){
 			Process* proc2 = cola_procesos[e];
-			printf("----Nuevo PROCESO----\n" );
+			printf("----PROCESO %i----\n", e+1);
 			printf("Output: %s\n", proc2->foo);
-			printf("ID: %d\n", proc2->id);
 
 			printf("ExitCode: %d\n", proc2->status);
-			//printf("Status: %d\n", proc2->status);
-			printf("Intentos: %d\n", proc2->intentos);
 		}
-		
-}
+		printf("----Estadisticas Generales-----:\n");
+		printf("Tiempo total sistema (Tiempo secuencial): %f\n", time_spent);
+		printf("Time in microseconds (Tiempo paralelo): %f microseconds\n",
+            time_microseconds/1000000
+          ); // Added semicolon
+		printf("M: %i\n", process_amount);
+		printf("N: %i\n", n);
+
+}		
 
 
-char** arguments_array(char* string){
-
-	printf("%s\n", "ENTROOO");
-
-	//char**arguments=(char* *) malloc((2) * sizeof(char*));
-	char**arguments=(char* *) malloc((2)*sizeof(char*));
-	//arguments = parse(string);	
-	//char* filenme = 'ls'
-	//char* argument = '-a'
-	//arguments[0] = filename
-	//arguments[1] = argument
-
-	return arguments;
-
-
-
-}
 
 void  parse(char *line, char **argv)
 {	
@@ -148,7 +134,6 @@ void  parse(char *line, char **argv)
           			else{
           				line++;
           			}
-          		//}
 
           }
           if (comillas%2==0 && primero_comilla(line)){
@@ -190,8 +175,6 @@ char*  execute(Process*proc)
           exit(1);
      }
      else if (proc->id == 0) {         /* for the child process:         */
-     printf("---------Inicio Proceso Hijo-----------\n" );
-     printf("comando: %s\n", *proc->argv);
      dup2 (proc->link[1], STDOUT_FILENO);
 		 close(proc->link[0]);
 		 close(proc->link[1]);
@@ -204,13 +187,13 @@ char*  execute(Process*proc)
      }
      else {                                  /* for the parent:      */
           //while (wait(&status) != pid)       /* wait for completion  */
-     	printf("Soy unico padre\n" );;
+     	//printf("Soy unico padre\n" );;
      }
 
      char* retornar;
      retornar = "hola";
 
-     printf("Fin de execute:\n");
+     //printf("Fin de execute:\n");
      return retornar;
 }
 
@@ -254,7 +237,7 @@ int process_count(char *file)
 	int counter=0;
 	length = getline(&buffer, &bufsize, file_pointer);
 	while (length > 0){
-		printf("%s\n", buffer);
+		//printf("%s\n", buffer);
 		counter++;
 		length = getline(&buffer, &bufsize, file_pointer);
 
@@ -295,13 +278,4 @@ Process** crear_cola_procesos(int amount, char *filename)
 	return cola_procesos;
 }
 
-int terminado(int cantidad_procesos, Process** cola_procesos){
-	printf("Terminado:\n");
-	int e;
-	for (e=0;e<cantidad_procesos; e++){
-		Process* proceso = cola_procesos[e];
-		printf("proc: %d\n", proceso->id);
-	}
-	return 1;
-}
 
