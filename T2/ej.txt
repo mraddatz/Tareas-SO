@@ -1,8 +1,10 @@
 ls -al
 echo something
 date "+DATE: %Y-%m-%d%nTIME: %H:%M:%S"
+ctm la wea aweonaaaaaa
+hoa
 ps T
 ls -al
 echo something
 ps T
-sisi qliaooo
+ls -al
