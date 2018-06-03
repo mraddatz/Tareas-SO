@@ -49,7 +49,7 @@ void tlb_incr_timestamps(TLB* tlb) {
 
 // Incrementa todos los timestamps de la memoria
 void mem_incr_timestamps(Memory* mem) {
-    for (int i=0; i < RAM_SIZE; i++) {
+    for (int i=0; i < MEM_SIZE; i++) {
         ME* entry = mem->frames[i];
         if (entry != NULL) entry->timestamp++;
     }
@@ -102,7 +102,10 @@ void tlb_set(TLB* tlb, unsigned page, unsigned frame) {
         for (int i = 0; i < TLB_SIZE; i++){
             node = tlb->entries[i];
             if (0 == node->page) { // TLBE vacia
-                if (i == TLB_SIZE - 1) tlb->is_full = true; // Se lleno la TLB
+                if (i == TLB_SIZE - 1) {
+                    tlb->is_full = true; // Se lleno la TLB
+                printf("TLB FULL\n");
+                }
                 break;
             }
         }
@@ -121,8 +124,9 @@ void tlb_set(TLB* tlb, unsigned page, unsigned frame) {
 /** Libera todos los recursos asociados a la TLB */
 void tlb_destroy(TLB* tlb) {
     for (int i = 0; i < TLB_SIZE; i++){
-        free(&(tlb->entries[i]));
+        free(tlb->entries[i]);
     }
+    free(tlb->entries);
     free(tlb);
 }
 
@@ -132,16 +136,16 @@ Memory* memory_init() {
     mem->lru           = 0;
     mem->max_timestamp = 0;
     mem->is_full       = false;
-    mem->frames = (ME**)calloc(RAM_SIZE, sizeof(ME*));
+    mem->frames = (ME**)calloc(MEM_SIZE, sizeof(ME*));
     
-    for (int i = 0; i < RAM_SIZE; i++) mem->frames[i] = me_init();
+    for (int i = 0; i < MEM_SIZE; i++) mem->frames[i] = me_init();
 
     return mem;
 }
 
 // Setea la entrada LRU
 void mem_update_lru(Memory* mem) {
-    for (int i = 0; i < RAM_SIZE; i++){
+    for (int i = 0; i < MEM_SIZE; i++){
         ME* node = mem->frames[i];
         if (mem->max_timestamp < node->timestamp) {
             mem->max_timestamp = node->timestamp;
@@ -167,28 +171,63 @@ void swap(Memory* mem, char* data, PTE* pte) {
     return;
 }
 
+// Retorna el dato de 256 bytes de un frame de memoria
 char* mem_get_data(Memory* mem, unsigned frame) {
     return mem->frames[frame]->data;
 }
 
+/** Libera todos los recursos asociados a la Memoria */
+void mem_destroy(Memory* mem) {
+    for (int i = 0; i < MEM_SIZE; i++){
+        free(mem->frames[i]);
+    }
+    free(mem->frames);
+    free(mem);
+}
+
+// Obtiene el numero de frame asociado a una pagina, o page fault
 unsigned page_table_get_frame(PageTable* pt, unsigned page) {
     PTE* pte = pt->entries[page];
     if (pte->obsol_bit) return pte->frame;
     else return PAGE_FAULT;
-} // +56975298501
+}
 
 PageTable* page_table_init(unsigned level, int* size) { // level es en realidad el nivel-1
     PageTable* pt = (PageTable*)malloc(sizeof(PageTable));
     pt->entries = (PTE**)calloc((int)pow(2, size[level]), sizeof(PTE*));
+    pt->size = (unsigned)pow(2, size[level]);
     // Inicializar entries
-    for (int i = 0; i < (int)pow(2, size[level]); i++) pt->entries[i] = pte_init();
+    for (int i = 0; i < pt->size; i++) pt->entries[i] = pte_init();
     return pt;
 }
 
 PageDirectory* page_directory_init(unsigned level, int* size) { // level es en realidad el nivel-1
     PageDirectory* pd = (PageDirectory*)malloc(sizeof(PageDirectory));
     pd->entries = (PDE**)calloc((int)pow(2, size[level]), sizeof(PDE*));
+    pd->size = (unsigned)pow(2, size[level]);
     // Inicializar entries
-    for (int i = 0; i < (int)pow(2, size[level]); i++) pd->entries[i] = pde_init();
+    for (int i = 0; i < pd->size; i++) pd->entries[i] = pde_init();
     return pd;
+}
+
+// Libera todas las tablas recursivamente
+void table_destroy(void* table, unsigned nivel, unsigned niveles) {
+    if (nivel == niveles) { // es page table
+        for (int i=0; i < ((PageTable*)table)->size; i++) {
+            free(((PageTable*)table)->entries[i]);
+        }
+        free(((PageTable*)table)->entries);
+        free((PageTable*)table);
+    }
+    else { // Es page directory
+        for (int i=0; i < ((PageDirectory*)table)->size; i++) {
+            PDE* entry = ((PageDirectory*)table)->entries[i];
+            if (entry->ptr != NULL) { // Esta inicializada
+                table_destroy(entry->ptr, nivel+1, niveles);
+            }
+            free(entry);
+        }
+        free(((PageDirectory*)table)->entries);
+        free((PageDirectory*)table);
+    }
 }

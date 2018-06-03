@@ -1,12 +1,6 @@
 #ifndef P2_H
 #define P2_H
 
-// retorna la respresentacion binaria del entero k
-unsigned int_to_bin(unsigned k);
-
-// 
-unsigned* parse_int(unsigned n);
-
 // Retorna n bits de num partiendo desde start (0-index)
 unsigned get_n_bits(unsigned num, unsigned n, unsigned start);
 

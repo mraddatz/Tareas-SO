@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#define RAM_SIZE 256
+#define MEM_SIZE 256
 #define TLB_SIZE 64
 #define TLB_MISS -1
 #define PAGE_FAULT -1
@@ -55,17 +55,21 @@ void tlb_destroy(TLB* tlb);
 // PageTableEntry
 typedef struct {
     unsigned frame; // 0 - 255
-    bool valid_bit; // Bit de validez: 1 cuando ya se inicializo
     bool obsol_bit; // Bit de obsolesencia: 1 cuando apunta a un frame que tiene la info correspondiente.
 } PTE;
 
+/** Crea una PTE inicialmente vacia y retorna el puntero */
+PTE* pte_init();
+
 typedef struct {
     PTE** entries;
+    unsigned size;
 } PageTable;
 
-unsigned page_table_get_frame(PageTable* pt, unsigned page);
-
 PageTable* page_table_init(unsigned level, int* size);
+
+// Obtiene el numero de frame asociado a una pagina, o page fault
+unsigned page_table_get_frame(PageTable* pt, unsigned page);
 
 /************** PAGE DIRECTORY ***************/
 /* Tabla que apunta a page tables */
@@ -76,13 +80,20 @@ typedef struct {
     void* ptr; // Puede ser PageTable o PageDirectory
 } PDE;
 
+/** Crea una PDE inicialmente vacia y retorna el puntero */
+PDE* pde_init();
+
 typedef struct {
     PDE** entries;
+    unsigned size;
 } PageDirectory;
 
 PageDirectory* page_directory_init(unsigned level, int* size);
 
-/******************** RAM ********************/
+// Libera todas las tablas recursivamente
+void table_destroy(void* table, unsigned nivel, unsigned niveles);
+
+/******************** MEM ********************/
 
 // MemoryEntry
 typedef struct {
@@ -95,7 +106,7 @@ typedef struct {
 ME* me_init();
 
 typedef struct {
-    ME** frames; // Tendra tamano RAM_SIZE
+    ME** frames; // Tendra tamano MEM_SIZE
     bool is_full;
     ME* lru;
     unsigned max_timestamp;
@@ -108,8 +119,13 @@ void mem_incr_timestamps(Memory* mem);
 
 void mem_update_lru(Memory* mem);
 
+/* Mete la data en memoria, saca al LRU y actualiza la PT */
 void swap(Memory* mem, char* data, PTE* pte);
 
+// Retorna el dato de 256 bytes de un frame de memoria
 char* mem_get_data(Memory* mem, unsigned frame);
+
+/** Libera todos los recursos asociados a la Memoria */
+void mem_destroy(Memory* mem);
 
 #endif

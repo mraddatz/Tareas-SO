@@ -44,12 +44,3 @@ int* optimize(int n, int bits, int mem_sum) {
     }
     return minimos;
 }
-
-// int main() {
-//     for (int i=1; i < 6; i++) {
-//         min_mem = 0;
-//         int* minimo = optimize(i, N_BITS, 0);
-//         printf("Reparticion: %d-%d-%d-%d-%d bits\nMemoria usada: %d bits\n", minimo[0], minimo[1], minimo[2], minimo[3], minimo[4], min_mem);
-//     }
-//     return 0;
-// }

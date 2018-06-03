@@ -3,7 +3,7 @@ CFLAGS=-c -Wall -I.
 LDFLAGS= -lm
 SOURCES=p2.c structs.c optimize.c
 OBJECTS=$(SOURCES:.c=.o)
-EXECUTABLE=t2p2
+EXECUTABLE=simulator
 
 all: $(SOURCES) $(EXECUTABLE)
     
