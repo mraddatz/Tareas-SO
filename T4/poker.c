@@ -1,7 +1,23 @@
 #include "include/poker.h"
 
 int pintas[4] = {HEART, DMOND, CLOVR, SPADE};
+int pintas_repr[4] = {HEART_REPR, DMOND_REPR, CLOVR_REPR, SPADE_REPR};
 int cartas[13] = {A,2};
+
+Partida* partida_init() {
+    Partida* p = malloc(sizeof(Partida));
+    p->dealer = 0;
+    p->num_jugadores = 0;
+    return p;
+}
+
+Jugador* jugador_init(char* nombre) {
+    Jugador* j = malloc(sizeof(Jugador));
+    j->pot = 1000;
+    j->nombre = nombre;
+    // INICIALIZAR SOCKET
+    return j;
+}
 
 // Cobra la apuesta minima
 void apuesta_minima(Jugador* jugadores) {
@@ -42,13 +58,33 @@ void cambiar_cartas(int cartas[][2], int n, Jugador* j) {
                 nuevas_cartas[cont][1] = j->cartas[k][1];
             }
         }
+    //  ENVIAR A CLIENTE LAS CARTAS NUEVAS_CARTAS
+    }
+}
+
+// Decide quien parte esta vuelta y le envia el msje
+void who_first(Partida* p) {
+    for (int i=0; i < p->num_jugadores; i++) {
+        if (i == p->dealer) {
+            Jugador j = p->jugadores[i];
+            // ENVIAR MENSAJE A J
+            p->dealer = (p->dealer + 1) % p->num_jugadores;
+            return;
+        }
     }
 }
 
 void print_cartas(int cartas[][2], int n) {
-    int pintas[4] = {HEART_REPR, DMOND_REPR, CLOVR_REPR, SPADE_REPR};
     for (int i=0; i < n; i++) {
-        wprintf(L"%d%lc - ", cartas[i][0], pintas[cartas[i][1]-1]);
+        wprintf(L"%d%lc - ", cartas[i][0], pintas_repr[cartas[i][1]-1]);
     }
     wprintf(L"\n");
+}
+
+// Libera el heap
+void free_memory(Partida* p) {
+    for (int i=0; i < p->num_jugadores; i++) {
+        free(&(p->jugadores[i]));
+    }
+    free(p);
 }

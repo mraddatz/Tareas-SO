@@ -65,7 +65,15 @@ typedef struct {
 
 typedef struct {
     Jugador* jugadores;
+    int num_jugadores;
+    int dealer;
 } Partida;
+
+// INITS
+
+Partida* partida_init();
+
+Jugador* jugador_init(char* nombre);
 
 // Cobra la apuesta minima
 void apuesta_minima(Jugador* jugadores);
@@ -76,6 +84,12 @@ void repartir_cartas(Jugador* jugadores);
 // Cambio de cartas de cada ronda. Se ejecuta al recibir RET_CARDS_CHNG
 void cambiar_cartas(int cartas[][2], int n, Jugador* j);
 
+// Decide quien parte esta vuelta y le envia el msje
+void who_first(Partida* p);
+
 void print_cartas(int cartas[][2], int n);
+
+// Libera el heap
+void free_memory(Partida* p);
 
 #endif
