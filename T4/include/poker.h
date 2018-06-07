@@ -84,7 +84,7 @@ typedef struct {
 
 Partida* partida_init();
 
-Jugador* jugador_init(char* nombre);
+Jugador* jugador_init(Partida* p, char* nombre);
 
 // Cobra la apuesta minima
 void apuesta_minima(Jugador* jugadores);
@@ -100,6 +100,12 @@ void who_first(Partida* p);
 
 // Despues de mandar GET_BET y de recibir RET_BET
 bool manage_bet(Partida* p, int bet_code);
+
+int evaluar_mano(int cartas[5][2]);
+
+int count_pintas(int cartas[5][2], int pinta);
+
+int count_nums(int cartas[5][2], int num);
 
 void print_cartas(int cartas[][2], int n);
 
