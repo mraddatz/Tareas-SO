@@ -2,6 +2,7 @@
 #define POKER_H
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <locale.h>
 #include <wchar.h>
 
@@ -51,22 +52,32 @@
 #define BET_200         4
 #define BET_500         5
 
+#define PAR             1
+#define DOS_PARES       2
+#define TRIO            3
+#define ESCALA          4
+#define COLOR           5
+#define POKER           6
+
 // Socket placeholder
 typedef struct {
 } Socket;
 
 // Jugador
 typedef struct {
-    Socket socket;
+    int id;
     int pot;
     char* nombre;
     int cartas[5][2];
+    Socket socket;
 } Jugador;
 
 typedef struct {
-    Jugador* jugadores;
+    Jugador* jugadores[2];
     int num_jugadores;
     int dealer;
+    int turno;
+    int pozo;
 } Partida;
 
 // INITS
@@ -86,6 +97,9 @@ void cambiar_cartas(int cartas[][2], int n, Jugador* j);
 
 // Decide quien parte esta vuelta y le envia el msje
 void who_first(Partida* p);
+
+// Despues de mandar GET_BET y de recibir RET_BET
+bool manage_bet(Partida* p, int bet_code);
 
 void print_cartas(int cartas[][2], int n);
 
