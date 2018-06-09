@@ -26,8 +26,8 @@ void esperar_mensaje(mensaje *msg, int socket) {
 }
 
 int leer_mensaje(mensaje *msg, int id_socket) {
-    if (read(id_socket, msg, sizeof(mensaje)) < 0) error("ERROR reading from socket");
-    msg->payload[msg->size] = '\0'; // Limitar payload segun size
+    if (read(id_socket, msg, sizeof(*msg)) < 0) error("ERROR reading from socket");
+    return 1;
 }
 
 int enviar_mensaje_payload(int socket, mensaje *msg){
@@ -145,12 +145,14 @@ int main(int argc, char *argv[]) {
     Jugador* j2 = jugador_init(msg_cliente_2.payload);
     Partida* p = partida_init(j1, j2);
     repartir_cartas(j1, j2);
-    
+    for (int i=0; i<5; i++) {
+        printf("%d %d\n", j1->cartas[i][0], j1->cartas[i][1]);
+    }
     while (true) {
         getBin(j1->pot, pot_buffer);
-        enviar_mensaje(socket_cliente_1, START_RND, 1u, j1->pot);
+        enviar_mensaje(socket_cliente_1, START_RND, 2u, pot_buffer);
         getBin(j2->pot, pot_buffer);
-        enviar_mensaje(socket_cliente_2, START_RND, 1u, j2->pot);
+        enviar_mensaje(socket_cliente_2, START_RND, 2u, pot_buffer);
 
         if (j1->pot >= 10) {
             enviar_mensaje(socket_cliente_1, INIT_BET, 0u, NULL_PAYLOAD);
@@ -169,10 +171,11 @@ int main(int argc, char *argv[]) {
             enviar_mensaje(socket_cliente_2, WIN_LOSE, 1u, 2u);
         }
 
-    }
 
+    }
     close(socket_cliente_1);
     close(socket_cliente_2);
     close(id_socket_in);
+    free_memory(p);
     return 0; 
 }

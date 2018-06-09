@@ -23,8 +23,6 @@ int enviar_mensaje_payload(int socket, mensaje *msg){
 
 int leer_mensaje(mensaje *msg, int id_socket){
     if (read(id_socket, msg, sizeof(mensaje)) < 0) error("ERROR reading from socket");
-    msg->payload[msg->size] = '\0'; // Limitar payload segun size
-
     return 1;
 }
 

@@ -183,8 +183,7 @@ void print_cartas(int cartas[][2], int n) {
 
 // Libera el heap
 void free_memory(Partida* p) {
-    for (int i=0; i < 2; i++) {
-        free(p->jugadores[i]);
-    }
+    free(p->jugadores[0]);
+    free(p->jugadores[1]);
     free(p);
 }
