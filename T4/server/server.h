@@ -9,7 +9,7 @@
 typedef struct{
 	unsigned char message_type_id;
 	unsigned char size;
-	//unsigned char payload[10];
+	unsigned char payload[10];
 }mensaje;
 
 void error(const char *msg);
