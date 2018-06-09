@@ -19,8 +19,7 @@ int enviar_mensaje(int socket, unsigned char id, unsigned char size, char* paylo
 
 int leer_mensaje(mensaje *msg, int id_socket){
     if (read(id_socket, msg, sizeof(msg)) < 0) error("ERROR reading from socket");
-    // printf("Here is the message: %d\n", msg->message_type_id);
-    //fflush(stdout);
+    msg->payload[msg->size] = '\0'; // Limitar payload segun size
     return 1;
 }
 
