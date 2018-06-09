@@ -95,14 +95,14 @@ int oponent_nickname(char *nickname, char *nickname_oponente, mensaje *msg, int 
 int initial_pot(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 	int pot;
 	memcpy(&pot, &msg->payload, msg->size);
-	printf("Your initial pot is: %d\n", pot, msg->size);
+	printf("Your initial pot is: %d\n", pot);
 	fflush(stdout);
     msg->message_type_id = 0u;
 	return 1;
 }
 
 int game_start(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
-	printf("Game started correctly");
+	printf("Game started correctly\n");
 	fflush(stdout);
     msg->message_type_id = 0u;
 	return 1;
@@ -111,7 +111,7 @@ int game_start(char *nickname, char *nickname_oponente, mensaje *msg, int socket
 int start_round(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 	int pot;
 	memcpy(&pot, &msg->payload, msg->size);
-	printf("Your current pot is: %d\n", pot, msg->size);
+	printf("Your current pot is: %d\n", pot);
 	fflush(stdout);
     msg->message_type_id = 0u;
 	return 1;
@@ -120,7 +120,7 @@ int start_round(char *nickname, char *nickname_oponente, mensaje *msg, int socke
 int initial_bet(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 	int bet;
 	memcpy(&bet, &msg->payload, msg->size);
-	printf("Your initial bet is: %d\n", bet, msg->size);
+	printf("Your initial bet is: %d\n", bet);
 	fflush(stdout);
     msg->message_type_id = 0u;
 	return 1;
@@ -138,6 +138,31 @@ int turn(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
     msg->message_type_id = 0u;
 	return 1;
 }
+
+int get_bet(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
+	unsigned char bets[msg->size];
+	memcpy(&bets, &msg->payload, msg->size);
+	char *prints[5] = {" fold(1)", " 0(2)", " 100(3)", " 200(4)", " 500(5)"};
+	printf("Your bet option ids are:");
+	for (int i=0; i < msg->size; i++){
+		printf(prints[bets[i-1]]);
+	}
+	printf("\n");
+
+	unsigned char bet = 1u;
+    printf("Enter your bet id: \n");
+	fflush(stdout);
+	//scanf("%d", bet);
+	printf("Sending bet\n");
+	msg->message_type_id = 15u;
+	memcpy(&msg->payload, &bet, sizeof(bet));
+	fflush(stdout);
+	msg->size = sizeof(bet);
+    enviar_mensaje_payload(socket, msg);
+    msg->message_type_id = 0u;
+	return 1;
+}
+
 
 
 int main(int argc, char *argv[])
@@ -188,6 +213,7 @@ int main(int argc, char *argv[])
     acciones[8] = start_round;
     acciones[9] = initial_bet;
     acciones[11] = turn;
+    acciones[14] = get_bet;
     mensaje msg_servidor;
     //mensaje al servidor
     //ejecutar_accion(acciones, CONN_ESTAB, '1', 'b', &msg_servidor, sockfd);
@@ -197,8 +223,6 @@ int main(int argc, char *argv[])
 
     while (msg_servidor.message_type_id != 30){
     	esperar_mensaje(&msg_servidor, sockfd);
-    	printf("msje%d", msg_servidor.message_type_id);
-    	fflush(stdout);
         ejecutar_accion(acciones, msg_servidor.message_type_id, &nickname, &nickname_oponente, &msg_servidor, sockfd);
     }
 

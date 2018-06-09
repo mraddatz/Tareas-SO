@@ -163,6 +163,28 @@ int main(int argc, char *argv[]){
      enviar_mensaje_payload(socket_cliente_1, &first);
      enviar_mensaje_payload(socket_cliente_2, &first);
 
+     mensaje get_bet;
+     get_bet.message_type_id = 14u;
+     unsigned char ids[3] = {1u, 2u, 3u};
+     get_bet.size = sizeof(ids);
+     memcpy(&get_bet.payload, &ids, get_bet.size);
+     enviar_mensaje_payload(socket_cliente_1, &get_bet);
+     enviar_mensaje_payload(socket_cliente_2, &get_bet);
+
+     esperar_mensaje(&msg_cliente_1, socket_cliente_1);
+     if (compare_print(&msg_cliente_1, 15u, "apuesta jugador 1 recibida\n")){
+    	 unsigned char apuesta_1;
+    	 memcpy(&apuesta_1, msg_cliente_1.payload, msg_cliente_1.size);
+    	 printf("%d\n", apuesta_1);
+     }
+
+     esperar_mensaje(&msg_cliente_2, socket_cliente_2);
+     if (compare_print(&msg_cliente_2, 15u, "apuesta jugador 2 recibida\n")){
+    	 unsigned char apuesta_2;
+    	 memcpy(&apuesta_2, msg_cliente_2.payload, msg_cliente_2.size);
+    	 printf("%d\n", apuesta_2);
+     }
+
 
      close(socket_cliente_1);
      close(socket_cliente_2);
