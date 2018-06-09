@@ -1,20 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
+#include <string.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#define NULL_PAYLOAD ""
+
 typedef struct{
 	unsigned char message_type_id;
 	unsigned char size;
-	//unsigned char payload[10];
+	unsigned char payload[254];
 }mensaje;
 
 void error(const char *msg);
 
-int enviar_mensaje(int socket, int id, int size);
+int enviar_mensaje(int socket, unsigned char id, unsigned char size, unsigned char* payload);
 
 int leer_mensaje(mensaje *msg, int id_socket);
 
