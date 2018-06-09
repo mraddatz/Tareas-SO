@@ -18,8 +18,9 @@ int enviar_mensaje(int socket, unsigned char id, unsigned char size, char* paylo
 }
 
 int leer_mensaje(mensaje *msg, int id_socket){
-    if (read(id_socket, msg, sizeof(msg)) < 0) error("ERROR reading from socket");
+    if (read(id_socket, msg, sizeof(mensaje)) < 0) error("ERROR reading from socket");
     msg->payload[msg->size] = '\0'; // Limitar payload segun size
+
     return 1;
 }
 
@@ -46,8 +47,6 @@ int compare_print(mensaje *msg, unsigned char id, char *print){
 int compare(mensaje msg, unsigned char id){
 	return msg.message_type_id == id;
 }
-
-void connection_established(char nickname, char nickname_oponente, mensaje msg, int socket){}
 
 int main(int argc, char *argv[])
 {
@@ -100,7 +99,6 @@ int main(int argc, char *argv[])
         char nick[254];
         printf("Ingresa tu nick: ");
         scanf("%s",nick);
-        printf("%s\n", nick);
 		enviar_mensaje(sockfd, RET_NICK, strlen(nick), nick);
 	}
     printf("Esperando oponente...\n");

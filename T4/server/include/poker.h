@@ -47,6 +47,8 @@
 #define IMAGE           23U
 #define ERROR           24U
 
+#define INITIAL_POT     1000U
+
 #define FOLD            1
 #define BET_0           2
 #define BET_100         3
@@ -66,32 +68,28 @@ typedef struct {
 
 // Jugador
 typedef struct {
-    int id;
     int pot;
-    char* nombre;
     int cartas[5][2];
-    Socket socket;
+    char* nombre;
 } Jugador;
 
 typedef struct {
-    Jugador* jugadores[2];
-    int num_jugadores;
     int dealer;
-    int turno;
     int pozo;
+    Jugador* jugadores[2];
 } Partida;
 
 // INITS
 
-Partida* partida_init();
+Partida* partida_init(Jugador* j1, Jugador* j2);
 
-Jugador* jugador_init(Partida* p, char* nombre);
+Jugador* jugador_init(char* nombre);
 
 // Cobra la apuesta minima
 void apuesta_minima(Jugador* jugadores);
 
 // Reparte las 5 cartas iniciales
-void repartir_cartas(Jugador* jugadores);
+void repartir_cartas(Jugador* j1, Jugador* j2);
 
 // Cambio de cartas de cada ronda. Se ejecuta al recibir RET_CARDS_CHNG
 void cambiar_cartas(int cartas[][2], int n, Jugador* j);
@@ -100,7 +98,7 @@ void cambiar_cartas(int cartas[][2], int n, Jugador* j);
 void who_first(Partida* p);
 
 // Despues de mandar GET_BET y de recibir RET_BET
-bool manage_bet(Partida* p, int bet_code);
+bool manage_bet(Partida* p, Jugador* j, int bet_code, int* status_code);
 
 int evaluar_mano(int cartas[5][2]);
 
