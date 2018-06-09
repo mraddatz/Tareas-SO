@@ -16,7 +16,7 @@ typedef struct{
 
 void error(const char *msg);
 
-int enviar_mensaje(int socket, unsigned char id, unsigned char size, unsigned char* payload);
+int enviar_mensaje(int socket, unsigned char id, unsigned char size, char* payload);
 
 int leer_mensaje(mensaje *msg, int id_socket);
 

@@ -6,7 +6,7 @@ void error(const char *msg)
     exit(0);
 }
 
-int enviar_mensaje(int socket, unsigned char id, unsigned char size, unsigned char* payload){
+int enviar_mensaje(int socket, unsigned char id, unsigned char size, char* payload){
     unsigned char buffer[256]; 
     buffer[0] = id;
     buffer[1] = size;
@@ -98,7 +98,9 @@ int main(int argc, char *argv[])
 	compare_print(&msg_servidor, CONN_ESTAB, "Conexion establecida.\n");
 	esperar_mensaje(&msg_servidor, sockfd);
 	if (compare_print(&msg_servidor, ASK_NICK, "Enviando nickname del jugador\n")){
-        char* nick = "mutas";
+        char nick[254];
+        printf("Ingresa tu nick: ");
+        scanf("%s",nick);
         printf("%s\n", nick);
 		enviar_mensaje(sockfd, RET_NICK, strlen(nick), nick);
 	}
@@ -107,7 +109,7 @@ int main(int argc, char *argv[])
 	//recibir nickname adversario
 	esperar_mensaje(&msg_servidor, sockfd);
 	if (compare_print(&msg_servidor, OPNT_FOUND, "Recibido nickname del jugador contrario\n")){
-		enviar_mensaje(sockfd, 4u, 0u, "");
+		printf("Oponente: %s\n", msg_servidor.payload);
 	}
 
     close(sockfd);

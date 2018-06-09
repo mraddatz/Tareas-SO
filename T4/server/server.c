@@ -8,7 +8,7 @@ void error(const char *msg) {
     exit(1);
 }
 
-int enviar_mensaje(int socket, unsigned char id, unsigned char size, unsigned char* payload){
+int enviar_mensaje(int socket, unsigned char id, unsigned char size, char* payload){
     unsigned char buffer[256]; 
     buffer[0] = id;
     buffer[1] = size;
@@ -27,8 +27,7 @@ void esperar_mensaje(mensaje *msg, int socket) {
 
 int leer_mensaje(mensaje *msg, int id_socket) {
     if (read(id_socket, msg, sizeof(msg)) < 0) error("ERROR reading from socket");
-    //printf("Here is the message: %d\n", msg->message_type_id);
-    //fflush(stdout);
+    msg->payload[msg->size] = '\0'; // Limitar payload segun size
     return 1;
 }
 
@@ -96,7 +95,9 @@ int main(int argc, char *argv[]) {
         enviar_mensaje(socket_cliente_1, ASK_NICK, 0u, NULL_PAYLOAD);
     }
     esperar_mensaje(&msg_cliente_1, socket_cliente_1);
-    printf("El nick es %s\n", msg_cliente_1.payload);
+    if (compare_print(&msg_cliente_1, RET_NICK, "nickname jugador 1 recibido\n")){
+        printf("El nick 1 es %s\n", msg_cliente_1.payload);
+    }
 
     socket_cliente_2 = accept(id_socket_in,
                 (struct sockaddr *) &cli_addr,
@@ -106,18 +107,16 @@ int main(int argc, char *argv[]) {
     if (compare_print(&msg_cliente_2, START_CONN, "conectado a cliente 2\n")){
         enviar_mensaje(socket_cliente_2, CONN_ESTAB, 0u, NULL_PAYLOAD);
         sleep(1);
-        enviar_mensaje(socket_cliente_2, ASK_NICK, 0u, "");
+        enviar_mensaje(socket_cliente_2, ASK_NICK, 0u, NULL_PAYLOAD);
     }
     esperar_mensaje(&msg_cliente_2, socket_cliente_2);
 
-    if (compare_print(&msg_cliente_2, 4u, "nickname jugador 2 recibido\n")){
-        enviar_mensaje(socket_cliente_1, 5u, 0u, "");
+    if (compare_print(&msg_cliente_2, RET_NICK, "nickname jugador 2 recibido\n")){
+        printf("El nick 2 es %s\n", msg_cliente_2.payload);
+        enviar_mensaje(socket_cliente_2, OPNT_FOUND, msg_cliente_1.size, msg_cliente_1.payload);
+        enviar_mensaje(socket_cliente_1, OPNT_FOUND, msg_cliente_2.size, msg_cliente_2.payload);
     }
-
-    esperar_mensaje(&msg_cliente_1, socket_cliente_1);
-    if (compare_print(&msg_cliente_1, 4u, "nickname jugador 1 recibido\n")){
-        enviar_mensaje(socket_cliente_2, 5u, 0u, "");
-    }
+    
 
     close(socket_cliente_1);
     close(socket_cliente_2);
