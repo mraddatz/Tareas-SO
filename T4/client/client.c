@@ -71,12 +71,12 @@ int begin_connection(char *nickname, char *nickname_oponente, mensaje *msg, int 
 int send_nickname(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
     printf("Enter your nickname: \n");
 	fflush(stdout);
-    //scanf("%c", nickname);
+    //scanf("%s", nickname);
 	printf("Your nickname is: %s\n", nickname);
 	printf("Sending nickname\n");
 	msg->message_type_id = 4u;
-	memcpy(msg->payload, nickname, sizeof(*nickname));
-	msg->size = sizeof(*nickname);
+	memcpy(msg->payload, nickname, 10);
+	msg->size = 10;
     enviar_mensaje_payload(socket, msg);
     msg->message_type_id = 0u;
 	return 1;
@@ -127,7 +127,7 @@ int initial_bet(char *nickname, char *nickname_oponente, mensaje *msg, int socke
 }
 
 int turn(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
-	int player;
+	unsigned char player;
 	memcpy(&player, &msg->payload, msg->size);
 	if (player == 1){
 		printf("Your turn\n");
@@ -139,30 +139,95 @@ int turn(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 	return 1;
 }
 
+//int change_cards(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
+//	unsigned char change[5] = {1u, 0u, 1u, 0u, 0u};
+//	printf("Insert cards you want to change: ");
+//	printf("\n");
+//    msg->message_type_id = 0u;
+//
+//	mensaje apuesta;
+//    printf("Enter your bet id: \n");
+//	fflush(stdout);
+//	//scanf("%d", bet);
+//	printf("Sending bet\n");
+//	apuesta.message_type_id = 15u;
+//	memcpy(&apuesta.payload, &bet, sizeof(bet));
+//	fflush(stdout);
+//	apuesta.size = sizeof(bet);
+//    enviar_mensaje_payload(socket, &apuesta);
+//	return 1;
+//}
+
 int get_bet(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 	unsigned char bets[msg->size];
 	memcpy(&bets, &msg->payload, msg->size);
 	char *prints[5] = {" fold(1)", " 0(2)", " 100(3)", " 200(4)", " 500(5)"};
 	printf("Your bet option ids are:");
 	for (int i=0; i < msg->size; i++){
-		printf(prints[bets[i-1]]);
+		printf(prints[bets[i]-1u]);
 	}
 	printf("\n");
+    msg->message_type_id = 0u;
 
 	unsigned char bet = 1u;
+	mensaje apuesta;
     printf("Enter your bet id: \n");
 	fflush(stdout);
 	//scanf("%d", bet);
 	printf("Sending bet\n");
-	msg->message_type_id = 15u;
-	memcpy(&msg->payload, &bet, sizeof(bet));
+	apuesta.message_type_id = 15u;
+	memcpy(&apuesta.payload, &bet, sizeof(bet));
 	fflush(stdout);
-	msg->size = sizeof(bet);
-    enviar_mensaje_payload(socket, msg);
+	apuesta.size = sizeof(bet);
+    enviar_mensaje_payload(socket, &apuesta);
+	return 1;
+}
+
+//17
+int OK_bet(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
+	printf("Bet accepted\n");
+	fflush(stdout);
     msg->message_type_id = 0u;
 	return 1;
 }
 
+//18
+int round_ended(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
+	printf("End of round\n");
+	fflush(stdout);
+    msg->message_type_id = 0u;
+	return 1;
+}
+
+int five_cards(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
+	unsigned char cards[msg->size];
+	memcpy(&cards, &msg->payload, msg->size);
+	char *cartas[13] = {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10",
+			"J", "Q", "K"};
+	char pintas[4] = {HEART_REPR, DMOND_REPR, CLOVR_REPR, SPADE_REPR};
+	printf("Your cards are:");
+	for (int i=0; i < msg->size; i++){
+		//wprintf("%s%s",cartas[cards[i]-1u], pintas[cards[++i]-1u]);
+	}
+	msg->message_type_id = 0;
+	printf("\n");
+	fflush(stdout);
+	return 1;
+}
+
+//20
+int winner(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
+	unsigned char player;
+	memcpy(&player, &msg->payload, msg->size);
+	if (player == 1){
+		printf("Your turn\n");
+	}else{
+		printf("Oponents turn\n");
+	}
+	fflush(stdout);
+    msg->message_type_id = 0u;
+	return 1;
+}
 
 
 int main(int argc, char *argv[])
@@ -202,8 +267,8 @@ int main(int argc, char *argv[])
     //Aca empieza lo importante
     //
 
-    char nickname[100] = "Hola";
-    char nickname_oponente[100] = "Holados";
+    char nickname[100];
+    char nickname_oponente[100];
     acciones[1] = begin_connection;
     acciones[2] = connection_established;
     acciones[3] = send_nickname;
@@ -212,8 +277,11 @@ int main(int argc, char *argv[])
     acciones[7] = game_start;
     acciones[8] = start_round;
     acciones[9] = initial_bet;
+    acciones[10] = five_cards;
     acciones[11] = turn;
     acciones[14] = get_bet;
+    acciones[17] = OK_bet;
+    acciones[18] = round_ended;
     mensaje msg_servidor;
     //mensaje al servidor
     //ejecutar_accion(acciones, CONN_ESTAB, '1', 'b', &msg_servidor, sockfd);
@@ -223,7 +291,8 @@ int main(int argc, char *argv[])
 
     while (msg_servidor.message_type_id != 30){
     	esperar_mensaje(&msg_servidor, sockfd);
-        ejecutar_accion(acciones, msg_servidor.message_type_id, &nickname, &nickname_oponente, &msg_servidor, sockfd);
+    	printf("recibido %D\n", msg_servidor.message_type_id);
+        ejecutar_accion(acciones, msg_servidor.message_type_id, nickname, nickname_oponente, &msg_servidor, sockfd);
     }
 
 

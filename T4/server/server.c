@@ -71,8 +71,6 @@ int main(int argc, char *argv[]){
               sizeof(serv_addr)) < 0) 
               error("ERROR on binding");
 
-
-
      //Esperar mensaje
      listen(id_socket_in,5);
 
@@ -184,6 +182,16 @@ int main(int argc, char *argv[]){
     	 memcpy(&apuesta_2, msg_cliente_2.payload, msg_cliente_2.size);
     	 printf("%d\n", apuesta_2);
      }
+
+     mensaje send_5_cards;
+     send_5_cards.message_type_id = 10u;
+     unsigned char cartas[10] = {2u, HEART, 6u, CLOVR, 3u, DMOND, 7u, SPADE};
+     send_5_cards.size = sizeof(cartas);
+     memcpy(&send_5_cards.payload, &cartas, send_5_cards.size);
+     enviar_mensaje_payload(socket_cliente_1, &send_5_cards);
+     enviar_mensaje_payload(socket_cliente_2, &send_5_cards);
+     printf("llega");
+
 
 
      close(socket_cliente_1);
