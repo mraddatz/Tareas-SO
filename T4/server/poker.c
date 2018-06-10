@@ -13,10 +13,11 @@ Partida* partida_init(Jugador* j1, Jugador* j2) {
     return p;
 }
 
-Jugador* jugador_init(char* nombre) {
+Jugador* jugador_init(char* nombre, int socket) {
     Jugador* j = malloc(sizeof(Jugador));
     j->pot = INITIAL_POT;
     j->nombre = nombre;
+    j->socket = socket;
     return j;
 }
 

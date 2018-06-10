@@ -71,6 +71,20 @@ void armar_paquete_cartas(char* payload, int cartas[5][2]) {
     }
 }
 
+void armar_paquete_apuestas(char* payload, int apuestas[5], int* apuesta_size) {
+    char buff[1];
+    int cont = 0;
+    *apuesta_size = 0;
+    for (int i=0; i<5; i++) {
+        if (i != 0) {
+            *apuesta_size++;
+            getBin(apuestas[i], buff);
+            payload[cont++] = buff[0];
+        }
+    }
+}
+
+
 void getBin(int num, char *str) {
     unsigned byte = 0;
     int cont = 0;
@@ -156,42 +170,43 @@ int main(int argc, char *argv[]) {
         enviar_mensaje(socket_cliente_2, GAME_START, 0u, NULL_PAYLOAD);
     }
 
-    Jugador* j1 = jugador_init(msg_cliente_1.payload);
-    Jugador* j2 = jugador_init(msg_cliente_2.payload);
+    Jugador* j1 = jugador_init(msg_cliente_1.payload, socket_cliente_1);
+    Jugador* j2 = jugador_init(msg_cliente_2.payload, socket_cliente_2);
     Partida* p = partida_init(j1, j2);
     repartir_cartas(j1, j2);
     while (true) {
         getBin(j1->pot, int_buffer);
-        enviar_mensaje(socket_cliente_1, START_RND, 2u, int_buffer);
+        enviar_mensaje(j1->socket, START_RND, 2u, int_buffer);
         getBin(j2->pot, int_buffer);
-        enviar_mensaje(socket_cliente_2, START_RND, 2u, int_buffer);
+        enviar_mensaje(j2->socket, START_RND, 2u, int_buffer);
 
         if (j1->pot >= 10) {
-            enviar_mensaje(socket_cliente_1, INIT_BET, 0u, NULL_PAYLOAD);
+            enviar_mensaje(j1->socket, INIT_BET, 0u, NULL_PAYLOAD);
             j1->pot -= 10;
         }
         else {
             getBin(2u, int_buffer);
-            enviar_mensaje(socket_cliente_1, WIN_LOSE, 1u, int_buffer);
+            enviar_mensaje(j1->socket, WIN_LOSE, 1u, int_buffer);
             getBin(1u, int_buffer);
-            enviar_mensaje(socket_cliente_2, WIN_LOSE, 1u, int_buffer);
+            enviar_mensaje(j2->socket, WIN_LOSE, 1u, int_buffer);
         }
         if (j2->pot >= 10) {
-            enviar_mensaje(socket_cliente_2, INIT_BET, 0u, NULL_PAYLOAD);
+            enviar_mensaje(j2->socket, INIT_BET, 0u, NULL_PAYLOAD);
             j2->pot -= 10;
         }
         else {
             getBin(1u, int_buffer);
-            enviar_mensaje(socket_cliente_1, WIN_LOSE, 1u, int_buffer);
+            enviar_mensaje(j1->socket, WIN_LOSE, 1u, int_buffer);
             getBin(2u, int_buffer);
-            enviar_mensaje(socket_cliente_2, WIN_LOSE, 1u, int_buffer);
+            enviar_mensaje(j2->socket, WIN_LOSE, 1u, int_buffer);
         }
+        p->pozo = 10;
 
         armar_paquete_cartas(int_buffer, j1->cartas);
-        enviar_mensaje(socket_cliente_1, FIVE_CARDS, 10u, int_buffer);
+        enviar_mensaje(j1->socket, FIVE_CARDS, 10u, int_buffer);
 
         armar_paquete_cartas(int_buffer, j2->cartas);
-        enviar_mensaje(socket_cliente_2, FIVE_CARDS, 10u, int_buffer);
+        enviar_mensaje(j2->socket, FIVE_CARDS, 10u, int_buffer);
 
         Jugador* primero;
         Jugador* segundo;
@@ -200,48 +215,50 @@ int main(int argc, char *argv[]) {
                 primero = j1;
                 segundo = j2;
                 getBin(1u, int_buffer);
-                enviar_mensaje(socket_cliente_1, WHO_FIRST, 1u, int_buffer);
+                enviar_mensaje(j1->socket, WHO_FIRST, 1u, int_buffer);
                 getBin(2u, int_buffer);
-                enviar_mensaje(socket_cliente_2, WHO_FIRST, 1u, int_buffer);
+                enviar_mensaje(j2->socket, WHO_FIRST, 1u, int_buffer);
                 break;
             case 1:
                 primero = j2;
                 segundo = j1;
                 getBin(2u, int_buffer);
-                enviar_mensaje(socket_cliente_1, WHO_FIRST, 1u, int_buffer);
+                enviar_mensaje(j1->socket, WHO_FIRST, 1u, int_buffer);
                 getBin(1u, int_buffer);
-                enviar_mensaje(socket_cliente_2, WHO_FIRST, 1u, int_buffer);
+                enviar_mensaje(j2->socket, WHO_FIRST, 1u, int_buffer);
                 break;
             default:
                 p->dealer = 1 - p->dealer;
         }
 
-        enviar_mensaje(socket_cliente_1, GET_CARDS_CHNG, 0u, NULL_PAYLOAD);
-        esperar_mensaje(&msg_cliente_1, socket_cliente_1);
+        enviar_mensaje(j1->socket, GET_CARDS_CHNG, 0u, NULL_PAYLOAD);
+        esperar_mensaje(&msg_cliente_1, j1->socket);
         if (compare_print(&msg_cliente_1, RET_CARDS_CHNG, "cartas jugador 1 recibidas\n")){
             int cartas_cambio[5][2];
             desarmar_paquete_cartas(msg_cliente_1.payload, msg_cliente_1.size, cartas_cambio);
             cambiar_cartas(msg_cliente_1.size, cartas_cambio, j1);
             armar_paquete_cartas(int_buffer, j1->cartas);
-            enviar_mensaje(socket_cliente_1, FIVE_CARDS, 10u, int_buffer);
+            enviar_mensaje(j1->socket, FIVE_CARDS, 10u, int_buffer);
         }
-        enviar_mensaje(socket_cliente_2, GET_CARDS_CHNG, 0u, NULL_PAYLOAD);
-        esperar_mensaje(&msg_cliente_1, socket_cliente_1);
+        enviar_mensaje(j2->socket, GET_CARDS_CHNG, 0u, NULL_PAYLOAD);
+        esperar_mensaje(&msg_cliente_1, j1->socket);
         if (compare_print(&msg_cliente_2, RET_CARDS_CHNG, "cartas jugador 2 recibidas\n")){
             int cartas_cambio[5][2];
             desarmar_paquete_cartas(msg_cliente_2.payload, msg_cliente_2.size, cartas_cambio);
             cambiar_cartas(msg_cliente_2.size, cartas_cambio, j2);
             armar_paquete_cartas(int_buffer, j2->cartas);
-            enviar_mensaje(socket_cliente_2, FIVE_CARDS, 10u, int_buffer);
+            enviar_mensaje(j2->socket, FIVE_CARDS, 10u, int_buffer);
         }
-        while (true) {
-
-        }
-
+        int* apuesta_size;
+        int apuestas[5] = {0, BET_0, 0, 0, 0};
+        if (primero->pot >= 100) apuestas[BET_100 - 1] = BET_100;
+        if (primero->pot >= 200) apuestas[BET_200 - 1] = BET_200;
+        if (primero->pot >= 500) apuestas[BET_500 - 1] = BET_500;
+        armar_paquete_apuestas(int_buffer, apuestas, apuesta_size);
+        enviar_mensaje(primero->socket, GET_BET, apuesta_size, int_buffer);
     }
-    printf("salio\n");
-    close(socket_cliente_1);
-    close(socket_cliente_2);
+    close(j1->socket);
+    close(j1->socket);
     close(id_socket_in);
     free_memory(p);
     return 0; 

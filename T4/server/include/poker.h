@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <locale.h>
 #include <wchar.h>
+#include <sys/types.h> 
+#include <sys/socket.h>
 
 #define A               1
 #define J               11
@@ -62,15 +64,12 @@
 #define COLOR           5
 #define POKER           6
 
-// Socket placeholder
-typedef struct {
-} Socket;
-
 // Jugador
 typedef struct {
     int pot;
     int cartas[5][2];
     char* nombre;
+    int socket;
 } Jugador;
 
 typedef struct {
@@ -83,7 +82,7 @@ typedef struct {
 
 Partida* partida_init(Jugador* j1, Jugador* j2);
 
-Jugador* jugador_init(char* nombre);
+Jugador* jugador_init(char* nombre, int socket);
 
 // Cobra la apuesta minima
 void apuesta_minima(Jugador* jugadores);
