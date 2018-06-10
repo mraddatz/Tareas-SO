@@ -247,4 +247,5 @@ int main(int argc, char *argv[]) {
     close(id_socket_in);
     free_memory(p);
     return 0; 
+>>>>>>> 391fd2858c7bff61f8d0495f8cf4c83fceab8b47
 }

@@ -26,4 +26,5 @@ int compare_print(mensaje *msg, unsigned char id, char *print);
 
 int compare(mensaje msg, unsigned char id);
 
+
 void getBin(int num, char *str);
