@@ -39,7 +39,7 @@ int compare_print(mensaje *msg, unsigned char id, char *print){
 		fflush(stdout);
 		return 1;
 	}else{
-		printf("failed, rcvd %d and expecting %d\n", msg->message_type_id, id);
+		wprintf(L"failed, rcvd %d and expecting %d\n", msg->message_type_id, id);
 	    msg->message_type_id = NULL_MSG;
 		fflush(stdout);
 		return 0;
@@ -57,14 +57,14 @@ int ejecutar_accion(int (*acciones[])(char *nickname, char *nickname_oponente, m
 }
 
 int connection_established(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
-	printf("Connection established\n");
+	wprintf(L"Connection established\n");
 	fflush(stdout);
     msg->message_type_id = 0u;
 	return 1;
 }
 
 int begin_connection(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
-	printf("Iniciando conexion\n");
+	wprintf(L"Iniciando conexion\n");
 	fflush(stdout);
     enviar_mensaje(socket, 1u, 0u, "");
     msg->message_type_id = 0u;
@@ -72,11 +72,10 @@ int begin_connection(char *nickname, char *nickname_oponente, mensaje *msg, int 
 }
 
 int send_nickname(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
-    printf("Enter your nickname: \n");
-	fflush(stdout);
-    //scanf("%s", nickname);
-	printf("Your nickname is: %s\n", nickname);
-	printf("Sending nickname\n");
+    wprintf(L"Enter your nickname: \n>> ");
+    scanf("%s",nickname);
+	wprintf(L"Your nickname is: %s\n", nickname);
+	wprintf(L"Sending nickname\n");
 	msg->message_type_id = 4u;
 	memcpy(msg->payload, nickname, 10);
 	msg->size = 10;
@@ -86,9 +85,9 @@ int send_nickname(char *nickname, char *nickname_oponente, mensaje *msg, int soc
 }
 
 int oponent_nickname(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
-	printf("Recibido nickname contrario\n");
+	wprintf(L"Recibido nickname contrario\n");
 	memcpy(nickname_oponente, msg->payload, msg->size);
-	printf("Your opponents nickname is: %s\n", nickname_oponente);
+	wprintf(L"Your opponents nickname is: %s\n", nickname_oponente);
 	fflush(stdout);
 	//nickname_oponente
     msg->message_type_id = 0u;
@@ -98,14 +97,14 @@ int oponent_nickname(char *nickname, char *nickname_oponente, mensaje *msg, int 
 int initial_pot(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 	int pot;
 	memcpy(&pot, &msg->payload, msg->size);
-	printf("Your initial pot is: %d\n", pot);
+	wprintf(L"Your initial pot is: %d\n", pot);
 	fflush(stdout);
     msg->message_type_id = 0u;
 	return 1;
 }
 
 int game_start(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
-	printf("Game started correctly\n");
+	wprintf(L"Game started correctly\n");
 	fflush(stdout);
     msg->message_type_id = 0u;
 	return 1;
@@ -114,7 +113,7 @@ int game_start(char *nickname, char *nickname_oponente, mensaje *msg, int socket
 int start_round(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 	int pot;
 	memcpy(&pot, &msg->payload, msg->size);
-	printf("Your current pot is: %d\n", pot);
+	wprintf(L"Your current pot is: %d\n", pot);
 	fflush(stdout);
     msg->message_type_id = 0u;
 	return 1;
@@ -123,7 +122,7 @@ int start_round(char *nickname, char *nickname_oponente, mensaje *msg, int socke
 int initial_bet(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 	int bet;
 	memcpy(&bet, &msg->payload, msg->size);
-	printf("Your initial bet is: %d\n", bet);
+	wprintf(L"Your initial bet is: %d\n", bet);
 	fflush(stdout);
     msg->message_type_id = 0u;
 	return 1;
@@ -133,9 +132,9 @@ int turn(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 	unsigned char player;
 	memcpy(&player, &msg->payload, msg->size);
 	if (player == 1){
-		printf("Your turn\n");
+		wprintf(L"Your turn\n");
 	}else{
-		printf("Oponents turn\n");
+		wprintf(L"Oponents turn\n");
 	}
 	fflush(stdout);
     msg->message_type_id = 0u;
@@ -144,15 +143,15 @@ int turn(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 
 //int change_cards(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 //	unsigned char change[5] = {1u, 0u, 1u, 0u, 0u};
-//	printf("Insert cards you want to change: ");
-//	printf("\n");
+//	wprintf(L"Insert cards you want to change: ");
+//	wprintf(L"\n");
 //    msg->message_type_id = 0u;
 //
 //	mensaje apuesta;
-//    printf("Enter your bet id: \n");
+//    wprintf(L"Enter your bet id: \n");
 //	fflush(stdout);
 //	//scanf("%d", bet);
-//	printf("Sending bet\n");
+//	wprintf(L"Sending bet\n");
 //	apuesta.message_type_id = 15u;
 //	memcpy(&apuesta.payload, &bet, sizeof(bet));
 //	fflush(stdout);
@@ -165,19 +164,19 @@ int get_bet(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 	unsigned char bets[msg->size];
 	memcpy(&bets, &msg->payload, msg->size);
 	char *prints[5] = {" fold(1)", " 0(2)", " 100(3)", " 200(4)", " 500(5)"};
-	printf("Your bet option ids are:");
+	wprintf(L"Your bet option ids are:");
 	for (int i=0; i < msg->size; i++){
 		printf(prints[bets[i]-1u]);
 	}
-	printf("\n");
+	wprintf(L"\n");
     msg->message_type_id = 0u;
 
 	unsigned char bet = 1u;
 	mensaje apuesta;
-    printf("Enter your bet id: \n");
+    wprintf(L"Enter your bet id: \n");
 	fflush(stdout);
 	//scanf("%d", bet);
-	printf("Sending bet\n");
+	wprintf(L"Sending bet\n");
 	apuesta.message_type_id = 15u;
 	memcpy(&apuesta.payload, &bet, sizeof(bet));
 	fflush(stdout);
@@ -188,7 +187,7 @@ int get_bet(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 
 //17
 int OK_bet(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
-	printf("Bet accepted\n");
+	wprintf(L"Bet accepted\n");
 	fflush(stdout);
     msg->message_type_id = 0u;
 	return 1;
@@ -196,24 +195,24 @@ int OK_bet(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 
 //18
 int round_ended(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
-	printf("End of round\n");
+	wprintf(L"End of round\n");
 	fflush(stdout);
     msg->message_type_id = 0u;
 	return 1;
 }
 
 int five_cards(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
-	unsigned char cards[msg->size];
+	unsigned char cards[10];
 	memcpy(&cards, &msg->payload, msg->size);
-	char *cartas[13] = {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-			"J", "Q", "K"};
-	char pintas[4] = {HEART_REPR, DMOND_REPR, CLOVR_REPR, SPADE_REPR};
-	printf("Your cards are:");
-	for (int i=0; i < msg->size; i++){
-		//wprintf("%s%s",cartas[cards[i]-1u], pintas[cards[++i]-1u]);
+	char cartas[13] = {'A', '2', '3', '4', '5', '6', '7', '8', '9','D',
+			'J', 'Q', 'K'};
+	int pintas[4] = {HEART_REPR, DMOND_REPR, CLOVR_REPR, SPADE_REPR};
+	wprintf(L"Your cards are:");
+	for (int i=0; i < 5; i++){
+		wprintf(L"%c%lc - ",cartas[((int)cards[2*i])-1], pintas[((int)cards[2*i+1])-1]);
 	}
 	msg->message_type_id = 0;
-	printf("\n");
+	wprintf(L"\n");
 	fflush(stdout);
 	return 1;
 }
@@ -223,9 +222,9 @@ int winner(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 	unsigned char player;
 	memcpy(&player, &msg->payload, msg->size);
 	if (player == 1){
-		printf("Your turn\n");
+		wprintf(L"Your turn\n");
 	}else{
-		printf("Oponents turn\n");
+		wprintf(L"Oponents turn\n");
 	}
 	fflush(stdout);
     msg->message_type_id = 0u;
@@ -235,6 +234,7 @@ int winner(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 
 int main(int argc, char *argv[])
 {
+    setlocale(LC_ALL, ""); // Para imprimir pintas
     int sockfd, numero_puerto_input, n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
@@ -297,16 +297,16 @@ int main(int argc, char *argv[])
 	// esperar_mensaje(&msg_servidor, sockfd);
 	// if (compare_print(&msg_servidor, ASK_NICK, "Enviando nickname del jugador\n")){
     //     char nick[254];
-    //     printf("Ingresa tu nick: ");
+    //     wprintf(L"Ingresa tu nick: ");
     //     scanf("%s",nick);
 	// 	enviar_mensaje(sockfd, RET_NICK, strlen(nick), nick);
 	// }
-    // printf("Esperando oponente...\n");
+    // wprintf(L"Esperando oponente...\n");
 
 	// //recibir nickname adversario
 	// esperar_mensaje(&msg_servidor, sockfd);
 	// if (compare_print(&msg_servidor, OPNT_FOUND, "Recibido nickname del jugador contrario\n")){
-	// 	printf("Oponente: %s\n", msg_servidor.payload);
+	// 	wprintf(L"Oponente: %s\n", msg_servidor.payload);
 	// }
 
 
@@ -318,7 +318,7 @@ int main(int argc, char *argv[])
 
     while (msg_servidor.message_type_id != 30){
     	esperar_mensaje(&msg_servidor, sockfd);
-    	printf("recibido %D\n", msg_servidor.message_type_id);
+    	wprintf(L"recibido %d\n", msg_servidor.message_type_id);
         ejecutar_accion(acciones, msg_servidor.message_type_id, nickname, nickname_oponente, &msg_servidor, sockfd);
     }
 

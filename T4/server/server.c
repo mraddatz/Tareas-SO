@@ -9,6 +9,7 @@ void error(const char *msg) {
 }
 
 int enviar_mensaje(int socket, unsigned char id, unsigned char size, char* payload){
+    sleep(1);
     unsigned char buffer[256];
     buffer[0] = id;
     buffer[1] = size;
@@ -113,7 +114,7 @@ int main(int argc, char *argv[]) {
     msg_cliente_1.message_type_id = NULL_MSG;
     msg_cliente_2.message_type_id = NULL_MSG;
 
-    char int_buffer[4];
+    char int_buffer[10];
 
     // Aceptar conexiones
     listen(id_socket_in,5);
@@ -126,7 +127,6 @@ int main(int argc, char *argv[]) {
     esperar_mensaje(&msg_cliente_1, socket_cliente_1);
     if (compare_print(&msg_cliente_1, START_CONN, "conectado a cliente 1\n")){
         enviar_mensaje(socket_cliente_1, CONN_ESTAB, 0u, NULL_PAYLOAD);
-        sleep(1);
         enviar_mensaje(socket_cliente_1, ASK_NICK, 0u, NULL_PAYLOAD);
     }
     esperar_mensaje(&msg_cliente_1, socket_cliente_1);
@@ -141,19 +141,17 @@ int main(int argc, char *argv[]) {
 
     if (compare_print(&msg_cliente_2, START_CONN, "conectado a cliente 2\n")){
         enviar_mensaje(socket_cliente_2, CONN_ESTAB, 0u, NULL_PAYLOAD);
-        sleep(1);
         enviar_mensaje(socket_cliente_2, ASK_NICK, 0u, NULL_PAYLOAD);
     }
     esperar_mensaje(&msg_cliente_2, socket_cliente_2);
 
     if (compare_print(&msg_cliente_2, RET_NICK, "nickname jugador 2 recibido\n")){
+        printf("El nick 2 es %s\n", msg_cliente_2.payload);
         enviar_mensaje(socket_cliente_1, OPNT_FOUND, msg_cliente_2.size, msg_cliente_2.payload);
         enviar_mensaje(socket_cliente_2, OPNT_FOUND, msg_cliente_1.size, msg_cliente_1.payload);
-        sleep(1);
         getBin(INITIAL_POT, int_buffer);
         enviar_mensaje(socket_cliente_1, INIT_POT, 2u, int_buffer);
         enviar_mensaje(socket_cliente_2, INIT_POT, 2u, int_buffer);
-        sleep(1);
         enviar_mensaje(socket_cliente_1, GAME_START, 0u, NULL_PAYLOAD);
         enviar_mensaje(socket_cliente_2, GAME_START, 0u, NULL_PAYLOAD);
     }
@@ -247,5 +245,4 @@ int main(int argc, char *argv[]) {
     close(id_socket_in);
     free_memory(p);
     return 0; 
->>>>>>> 391fd2858c7bff61f8d0495f8cf4c83fceab8b47
 }
