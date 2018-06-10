@@ -74,8 +74,8 @@ typedef struct {
 } Jugador;
 
 typedef struct {
-    int dealer;
     int pozo;
+    int dealer;
     Jugador* jugadores[2];
 } Partida;
 
@@ -92,7 +92,7 @@ void apuesta_minima(Jugador* jugadores);
 void repartir_cartas(Jugador* j1, Jugador* j2);
 
 // Cambio de cartas de cada ronda. Se ejecuta al recibir RET_CARDS_CHNG
-void cambiar_cartas(int cartas[][2], int n, Jugador* j);
+void cambiar_cartas(int n, int cartas[n][2], Jugador* j);
 
 // Decide quien parte esta vuelta y le envia el msje
 void who_first(Partida* p);

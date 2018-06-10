@@ -9,7 +9,7 @@ void error(const char *msg) {
 }
 
 int enviar_mensaje(int socket, unsigned char id, unsigned char size, char* payload){
-    unsigned char buffer[256]; 
+    unsigned char buffer[256];
     buffer[0] = id;
     buffer[1] = size;
     int marker = 2;
@@ -52,6 +52,24 @@ int compare_print(mensaje *msg, unsigned char id, char *print){
 	}
 }
 
+void desarmar_paquete_cartas(char* payload, int n, int cartas[n][2]) {
+    for (int i=0; i < n; i++) {
+        cartas[i][0] = (int)payload[2*i];
+        cartas[i][1] = (int)payload[2*i+1];
+    }
+}
+
+void armar_paquete_cartas(char* payload, int cartas[5][2]) {
+    char buff[1];
+    int cont = 0;
+    for (int i=0; i<5; i++) {
+        getBin(cartas[i][0], buff);
+        payload[cont++] = buff[0];
+        getBin(cartas[i][1], buff);
+        payload[cont++] = buff[0];
+    }
+}
+
 void getBin(int num, char *str) {
     unsigned byte = 0;
     int cont = 0;
@@ -60,7 +78,7 @@ void getBin(int num, char *str) {
             if (num % 2) byte += pow(2, i);
             num >>= 1;
         }
-        str[cont] = byte;
+        str[cont] = (char)byte;
         cont++;
         byte = 0;
     } while (num != 0);
@@ -95,7 +113,7 @@ int main(int argc, char *argv[]) {
     msg_cliente_1.message_type_id = NULL_MSG;
     msg_cliente_2.message_type_id = NULL_MSG;
 
-    char pot_buffer[4];
+    char int_buffer[4];
 
     // Aceptar conexiones
     listen(id_socket_in,5);
@@ -129,13 +147,12 @@ int main(int argc, char *argv[]) {
     esperar_mensaje(&msg_cliente_2, socket_cliente_2);
 
     if (compare_print(&msg_cliente_2, RET_NICK, "nickname jugador 2 recibido\n")){
-        printf("El nick 2 es %s\n", msg_cliente_2.payload);
         enviar_mensaje(socket_cliente_1, OPNT_FOUND, msg_cliente_2.size, msg_cliente_2.payload);
         enviar_mensaje(socket_cliente_2, OPNT_FOUND, msg_cliente_1.size, msg_cliente_1.payload);
         sleep(1);
-        getBin(INITIAL_POT, pot_buffer);
-        enviar_mensaje(socket_cliente_1, INIT_POT, 2u, pot_buffer);
-        enviar_mensaje(socket_cliente_2, INIT_POT, 2u, pot_buffer);
+        getBin(INITIAL_POT, int_buffer);
+        enviar_mensaje(socket_cliente_1, INIT_POT, 2u, int_buffer);
+        enviar_mensaje(socket_cliente_2, INIT_POT, 2u, int_buffer);
         sleep(1);
         enviar_mensaje(socket_cliente_1, GAME_START, 0u, NULL_PAYLOAD);
         enviar_mensaje(socket_cliente_2, GAME_START, 0u, NULL_PAYLOAD);
@@ -145,34 +162,86 @@ int main(int argc, char *argv[]) {
     Jugador* j2 = jugador_init(msg_cliente_2.payload);
     Partida* p = partida_init(j1, j2);
     repartir_cartas(j1, j2);
-    for (int i=0; i<5; i++) {
-        printf("%d %d\n", j1->cartas[i][0], j1->cartas[i][1]);
-    }
     while (true) {
-        getBin(j1->pot, pot_buffer);
-        enviar_mensaje(socket_cliente_1, START_RND, 2u, pot_buffer);
-        getBin(j2->pot, pot_buffer);
-        enviar_mensaje(socket_cliente_2, START_RND, 2u, pot_buffer);
+        getBin(j1->pot, int_buffer);
+        enviar_mensaje(socket_cliente_1, START_RND, 2u, int_buffer);
+        getBin(j2->pot, int_buffer);
+        enviar_mensaje(socket_cliente_2, START_RND, 2u, int_buffer);
 
         if (j1->pot >= 10) {
             enviar_mensaje(socket_cliente_1, INIT_BET, 0u, NULL_PAYLOAD);
             j1->pot -= 10;
         }
         else {
-            enviar_mensaje(socket_cliente_1, WIN_LOSE, 1u, 2u);
-            enviar_mensaje(socket_cliente_2, WIN_LOSE, 1u, 1u);
+            getBin(2u, int_buffer);
+            enviar_mensaje(socket_cliente_1, WIN_LOSE, 1u, int_buffer);
+            getBin(1u, int_buffer);
+            enviar_mensaje(socket_cliente_2, WIN_LOSE, 1u, int_buffer);
         }
         if (j2->pot >= 10) {
             enviar_mensaje(socket_cliente_2, INIT_BET, 0u, NULL_PAYLOAD);
             j2->pot -= 10;
         }
         else {
-            enviar_mensaje(socket_cliente_1, WIN_LOSE, 1u, 1u);
-            enviar_mensaje(socket_cliente_2, WIN_LOSE, 1u, 2u);
+            getBin(1u, int_buffer);
+            enviar_mensaje(socket_cliente_1, WIN_LOSE, 1u, int_buffer);
+            getBin(2u, int_buffer);
+            enviar_mensaje(socket_cliente_2, WIN_LOSE, 1u, int_buffer);
         }
 
+        armar_paquete_cartas(int_buffer, j1->cartas);
+        enviar_mensaje(socket_cliente_1, FIVE_CARDS, 10u, int_buffer);
+
+        armar_paquete_cartas(int_buffer, j2->cartas);
+        enviar_mensaje(socket_cliente_2, FIVE_CARDS, 10u, int_buffer);
+
+        Jugador* primero;
+        Jugador* segundo;
+        switch(p->dealer) {
+            case 0:
+                primero = j1;
+                segundo = j2;
+                getBin(1u, int_buffer);
+                enviar_mensaje(socket_cliente_1, WHO_FIRST, 1u, int_buffer);
+                getBin(2u, int_buffer);
+                enviar_mensaje(socket_cliente_2, WHO_FIRST, 1u, int_buffer);
+                break;
+            case 1:
+                primero = j2;
+                segundo = j1;
+                getBin(2u, int_buffer);
+                enviar_mensaje(socket_cliente_1, WHO_FIRST, 1u, int_buffer);
+                getBin(1u, int_buffer);
+                enviar_mensaje(socket_cliente_2, WHO_FIRST, 1u, int_buffer);
+                break;
+            default:
+                p->dealer = 1 - p->dealer;
+        }
+
+        enviar_mensaje(socket_cliente_1, GET_CARDS_CHNG, 0u, NULL_PAYLOAD);
+        esperar_mensaje(&msg_cliente_1, socket_cliente_1);
+        if (compare_print(&msg_cliente_1, RET_CARDS_CHNG, "cartas jugador 1 recibidas\n")){
+            int cartas_cambio[5][2];
+            desarmar_paquete_cartas(msg_cliente_1.payload, msg_cliente_1.size, cartas_cambio);
+            cambiar_cartas(msg_cliente_1.size, cartas_cambio, j1);
+            armar_paquete_cartas(int_buffer, j1->cartas);
+            enviar_mensaje(socket_cliente_1, FIVE_CARDS, 10u, int_buffer);
+        }
+        enviar_mensaje(socket_cliente_2, GET_CARDS_CHNG, 0u, NULL_PAYLOAD);
+        esperar_mensaje(&msg_cliente_1, socket_cliente_1);
+        if (compare_print(&msg_cliente_2, RET_CARDS_CHNG, "cartas jugador 2 recibidas\n")){
+            int cartas_cambio[5][2];
+            desarmar_paquete_cartas(msg_cliente_2.payload, msg_cliente_2.size, cartas_cambio);
+            cambiar_cartas(msg_cliente_2.size, cartas_cambio, j2);
+            armar_paquete_cartas(int_buffer, j2->cartas);
+            enviar_mensaje(socket_cliente_2, FIVE_CARDS, 10u, int_buffer);
+        }
+        while (true) {
+
+        }
 
     }
+    printf("salio\n");
     close(socket_cliente_1);
     close(socket_cliente_2);
     close(id_socket_in);

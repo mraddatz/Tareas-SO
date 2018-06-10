@@ -45,7 +45,7 @@ void repartir_cartas(Jugador* j1, Jugador* j2) {
 }
 
 // Cambio de cartas de cada ronda. Se ejecuta al recibir RET_CARDS_CHNG
-void cambiar_cartas(int cartas[][2], int n, Jugador* j) {
+void cambiar_cartas(int n, int cartas[n][2], Jugador* j) {
     for (int i=0; i < n; i++) {
         for (int k=0; k < 5; k++) {
             if (j->cartas[k][0] == cartas[i][0] && j->cartas[k][1] == cartas[i][1]) {
@@ -54,7 +54,6 @@ void cambiar_cartas(int cartas[][2], int n, Jugador* j) {
             }
         }
     }
-    //  ENVIAR A CLIENTE LAS CARTAS CON MENSAJE FIVE_CARDS
 }
 
 // Decide quien parte esta vuelta y le envia el msje
@@ -183,7 +182,8 @@ void print_cartas(int cartas[][2], int n) {
 
 // Libera el heap
 void free_memory(Partida* p) {
-    free(p->jugadores[0]);
-    free(p->jugadores[1]);
+    for (int i=0; i < 2; i++) {
+        free(p->jugadores[i]);
+    }
     free(p);
 }
