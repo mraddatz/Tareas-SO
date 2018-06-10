@@ -6,10 +6,15 @@ void error(const char *msg)
     exit(0);
 }
 
-int enviar_mensaje(int socket, int id, int size){
-    mensaje msg;
-    msg.message_type_id = id;
-	return write(socket, &msg, sizeof(msg));
+int enviar_mensaje(int socket, unsigned char id, unsigned char size, char* payload){
+    unsigned char buffer[256]; 
+    buffer[0] = id;
+    buffer[1] = size;
+    int marker = 2;
+    for (int i = 0; i < size; i++) {
+        buffer[marker++] = payload[i];
+    }
+	return write(socket, buffer, marker);
 }
 
 int enviar_mensaje_payload(int socket, mensaje *msg){
@@ -17,27 +22,25 @@ int enviar_mensaje_payload(int socket, mensaje *msg){
 }
 
 int leer_mensaje(mensaje *msg, int id_socket){
-    if (read(id_socket, msg, sizeof(*msg)) < 0) error("ERROR reading from socket");
-    //printf("Here is the message: %d\n", msg->message_type_id);
-    //fflush(stdout);
+    if (read(id_socket, msg, sizeof(mensaje)) < 0) error("ERROR reading from socket");
     return 1;
 }
 
 void esperar_mensaje(mensaje *msg, int socket){
-    while (msg->message_type_id == 0u){
+    while (msg->message_type_id == NULL_MSG){
      leer_mensaje(msg, socket);
     }
 }
 
 int compare_print(mensaje *msg, unsigned char id, char *print){
 	if (msg->message_type_id == id){
-	    msg->message_type_id = 0u;
+	    msg->message_type_id = NULL_MSG;
 		printf(print);
 		fflush(stdout);
 		return 1;
 	}else{
-		printf("failed, %d\n", msg->message_type_id);
-	    msg->message_type_id = 0u;
+		printf("failed, rcvd %d and expecting %d\n", msg->message_type_id, id);
+	    msg->message_type_id = NULL_MSG;
 		fflush(stdout);
 		return 0;
 	}
@@ -63,7 +66,7 @@ int connection_established(char *nickname, char *nickname_oponente, mensaje *msg
 int begin_connection(char *nickname, char *nickname_oponente, mensaje *msg, int socket){
 	printf("Iniciando conexion\n");
 	fflush(stdout);
-    enviar_mensaje(socket, 1u, 0u);
+    enviar_mensaje(socket, 1u, 0u, "");
     msg->message_type_id = 0u;
 	return 1;
 }
@@ -283,6 +286,30 @@ int main(int argc, char *argv[])
     acciones[17] = OK_bet;
     acciones[18] = round_ended;
     mensaje msg_servidor;
+    msg_servidor.message_type_id = NULL_MSG;
+
+    // //mensaje al servidor
+    // n = enviar_mensaje(sockfd, START_CONN, 0u, "");
+    // //esperar a que el servidor pida el nickname y enviarlo
+
+    // esperar_mensaje(&msg_servidor, sockfd); //acknowledge
+	// compare_print(&msg_servidor, CONN_ESTAB, "Conexion establecida.\n");
+	// esperar_mensaje(&msg_servidor, sockfd);
+	// if (compare_print(&msg_servidor, ASK_NICK, "Enviando nickname del jugador\n")){
+    //     char nick[254];
+    //     printf("Ingresa tu nick: ");
+    //     scanf("%s",nick);
+	// 	enviar_mensaje(sockfd, RET_NICK, strlen(nick), nick);
+	// }
+    // printf("Esperando oponente...\n");
+
+	// //recibir nickname adversario
+	// esperar_mensaje(&msg_servidor, sockfd);
+	// if (compare_print(&msg_servidor, OPNT_FOUND, "Recibido nickname del jugador contrario\n")){
+	// 	printf("Oponente: %s\n", msg_servidor.payload);
+	// }
+
+
     //mensaje al servidor
     //ejecutar_accion(acciones, CONN_ESTAB, '1', 'b', &msg_servidor, sockfd);
 	//(*acciones[START_CONN])("", "", msg_servidor, sockfd);

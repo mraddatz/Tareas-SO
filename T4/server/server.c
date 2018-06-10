@@ -1,31 +1,44 @@
 /* A simple server in the internet domain using TCP
    The port number is passed as an argument */
-#include "server.h"
+#include "include/server.h"
+#include "include/poker.h"
 
-void error(const char *msg)
-{
+void error(const char *msg) {
     perror(msg);
     exit(1);
 }
 
-int enviar_mensaje(int socket, int id, int size){
-    mensaje msg;
-    msg.message_type_id = id;
-	return write(socket, &msg, sizeof(msg));
+int enviar_mensaje(int socket, unsigned char id, unsigned char size, char* payload){
+    unsigned char buffer[256]; 
+    buffer[0] = id;
+    buffer[1] = size;
+    int marker = 2;
+    for (int i = 0; i < size; i++) {
+        buffer[marker++] = payload[i];
+    }
+	return write(socket, buffer, marker);
+}
+
+void esperar_mensaje(mensaje *msg, int socket) {
+    while (msg->message_type_id == 0u){
+     leer_mensaje(msg, socket);
+    }
+}
+
+int leer_mensaje(mensaje *msg, int id_socket) {
+    if (read(id_socket, msg, sizeof(*msg)) < 0) error("ERROR reading from socket");
+    return 1;
 }
 
 int enviar_mensaje_payload(int socket, mensaje *msg){
 	return write(socket, msg, sizeof(*msg));
 }
 
-int leer_mensaje(mensaje *msg, int id_socket){
-    if (read(id_socket, msg, sizeof(*msg)) < 0) error("ERROR reading from socket");
-    //printf("Here is the message: %d\n", msg->message_type_id);
-    //fflush(stdout);
-    return 1;
+int compare(mensaje msg, unsigned char id) {
+	return msg.message_type_id == id;
 }
 
-int compare_print(mensaje *msg, unsigned char id, char *print){
+int compare_print(mensaje *msg, unsigned char id, char *print){ 
 	if (msg->message_type_id == id){
 	    msg->message_type_id = 0u;
 		printf(print);
@@ -39,163 +52,131 @@ int compare_print(mensaje *msg, unsigned char id, char *print){
 	}
 }
 
-void esperar_mensaje(mensaje *msg, int socket){
-    while (msg->message_type_id == 0u){
-     leer_mensaje(msg, socket);
+void getBin(int num, char *str) {
+    unsigned byte = 0;
+    int cont = 0;
+    do {
+        for (int i=0; i < 8; i++) {
+            if (num % 2) byte += pow(2, i);
+            num >>= 1;
+        }
+        str[cont] = byte;
+        cont++;
+        byte = 0;
+    } while (num != 0);
+    str[cont] = '\0';
+}
+
+int main(int argc, char *argv[]) {
+    int id_socket_in, socket_cliente_1, socket_cliente_2, numero_puerto_input;
+    socklen_t cli_addr_size;
+    struct sockaddr_in serv_addr, cli_addr;
+    if (argc < 2) {
+        fprintf(stderr,"ERROR, no port provided\n");
+        exit(1);
     }
-}
-
-int compare(mensaje msg, unsigned char id){
-	return msg.message_type_id == id;
-}
-
-int main(int argc, char *argv[]){
-     int id_socket_in, socket_cliente_1, socket_cliente_2, numero_puerto_input;
-     socklen_t cli_addr_size;
-     struct sockaddr_in serv_addr, cli_addr;
-     if (argc < 2) {
-         fprintf(stderr,"ERROR, no port provided\n");
-         exit(1);
-     }
+    srand(12345);
 
 
-     id_socket_in = socket(AF_INET, SOCK_STREAM, 0);
-     if (id_socket_in < 0)
-        error("ERROR opening socket");
-     bzero((char *) &serv_addr, sizeof(serv_addr));
-     numero_puerto_input = atoi(argv[1]);
-     serv_addr.sin_family = AF_INET;
-     serv_addr.sin_addr.s_addr = INADDR_ANY;
-     serv_addr.sin_port = htons(numero_puerto_input);
-     if (bind(id_socket_in, (struct sockaddr *) &serv_addr,
-              sizeof(serv_addr)) < 0) 
-              error("ERROR on binding");
+    id_socket_in = socket(AF_INET, SOCK_STREAM, 0);
+    if (id_socket_in < 0)
+    error("ERROR opening socket");
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    numero_puerto_input = atoi(argv[1]);
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_port = htons(numero_puerto_input);
+    if (bind(id_socket_in, (struct sockaddr *) &serv_addr,
+            sizeof(serv_addr)) < 0) 
+            error("ERROR on binding");
 
-     //Esperar mensaje
-     listen(id_socket_in,5);
+    // Inicializar mensajes
+    mensaje msg_cliente_1, msg_cliente_2;
+    msg_cliente_1.message_type_id = NULL_MSG;
+    msg_cliente_2.message_type_id = NULL_MSG;
 
-     cli_addr_size = sizeof(cli_addr);
-     socket_cliente_1 = accept(id_socket_in,
-                 (struct sockaddr *) &cli_addr, 
-                 &cli_addr_size);
+    char pot_buffer[4];
 
+    // Aceptar conexiones
+    listen(id_socket_in,5);
 
-     //leer mensaje
-     mensaje msg_cliente_1, msg_cliente_2;
-     msg_cliente_1.message_type_id = 0u;
-     msg_cliente_2.message_type_id = 0u;
+    cli_addr_size = sizeof(cli_addr);
+    socket_cliente_1 = accept(id_socket_in,
+                (struct sockaddr *) &cli_addr, 
+                &cli_addr_size);
 
+    esperar_mensaje(&msg_cliente_1, socket_cliente_1);
+    if (compare_print(&msg_cliente_1, START_CONN, "conectado a cliente 1\n")){
+        enviar_mensaje(socket_cliente_1, CONN_ESTAB, 0u, NULL_PAYLOAD);
+        sleep(1);
+        enviar_mensaje(socket_cliente_1, ASK_NICK, 0u, NULL_PAYLOAD);
+    }
+    esperar_mensaje(&msg_cliente_1, socket_cliente_1);
+    if (compare_print(&msg_cliente_1, RET_NICK, "nickname jugador 1 recibido\n")){
+        printf("El nick 1 es %s\n", msg_cliente_1.payload);
+    }
 
+    socket_cliente_2 = accept(id_socket_in,
+                (struct sockaddr *) &cli_addr,
+                &cli_addr_size);
+    esperar_mensaje(&msg_cliente_2, socket_cliente_2);
 
-     esperar_mensaje(&msg_cliente_1, socket_cliente_1);
-     if (compare_print(&msg_cliente_1, 1u, "conectado a cliente 1\n")){
-         enviar_mensaje(socket_cliente_1, 2u, 0u);
-         usleep(2);
-         enviar_mensaje(socket_cliente_1, 3u, 0u);
-     }
+    if (compare_print(&msg_cliente_2, START_CONN, "conectado a cliente 2\n")){
+        enviar_mensaje(socket_cliente_2, CONN_ESTAB, 0u, NULL_PAYLOAD);
+        sleep(1);
+        enviar_mensaje(socket_cliente_2, ASK_NICK, 0u, NULL_PAYLOAD);
+    }
+    esperar_mensaje(&msg_cliente_2, socket_cliente_2);
 
-     socket_cliente_2 = accept(id_socket_in,
-                 (struct sockaddr *) &cli_addr,
-                 &cli_addr_size);
-     esperar_mensaje(&msg_cliente_2, socket_cliente_2);
+    if (compare_print(&msg_cliente_2, RET_NICK, "nickname jugador 2 recibido\n")){
+        printf("El nick 2 es %s\n", msg_cliente_2.payload);
+        enviar_mensaje(socket_cliente_1, OPNT_FOUND, msg_cliente_2.size, msg_cliente_2.payload);
+        enviar_mensaje(socket_cliente_2, OPNT_FOUND, msg_cliente_1.size, msg_cliente_1.payload);
+        sleep(1);
+        getBin(INITIAL_POT, pot_buffer);
+        enviar_mensaje(socket_cliente_1, INIT_POT, 2u, pot_buffer);
+        enviar_mensaje(socket_cliente_2, INIT_POT, 2u, pot_buffer);
+        sleep(1);
+        enviar_mensaje(socket_cliente_1, GAME_START, 0u, NULL_PAYLOAD);
+        enviar_mensaje(socket_cliente_2, GAME_START, 0u, NULL_PAYLOAD);
+    }
 
-     if (compare_print(&msg_cliente_2, 1u, "conectado a cliente 2\n")){
-         enviar_mensaje(socket_cliente_2, 2u, 0u);
-         usleep(2);
-         enviar_mensaje(socket_cliente_2, 3u, 0u);
-     }
-     esperar_mensaje(&msg_cliente_2, socket_cliente_2);
-     if (compare_print(&msg_cliente_2, 4u, "nickname jugador 2 recibido\n")){
-    	 mensaje nick_msg_2;
-    	 memcpy(&nick_msg_2, &msg_cliente_2, sizeof(msg_cliente_2));
-    	 nick_msg_2.message_type_id = 5u;
-    	 enviar_mensaje_payload(socket_cliente_1, &nick_msg_2);
-    	 //enviar_mensaje(socket_cliente_1, 5u, 0u);
-     }
+    Jugador* j1 = jugador_init(msg_cliente_1.payload);
+    Jugador* j2 = jugador_init(msg_cliente_2.payload);
+    Partida* p = partida_init(j1, j2);
+    repartir_cartas(j1, j2);
+    for (int i=0; i<5; i++) {
+        printf("%d %d\n", j1->cartas[i][0], j1->cartas[i][1]);
+    }
+    while (true) {
+        getBin(j1->pot, pot_buffer);
+        enviar_mensaje(socket_cliente_1, START_RND, 2u, pot_buffer);
+        getBin(j2->pot, pot_buffer);
+        enviar_mensaje(socket_cliente_2, START_RND, 2u, pot_buffer);
 
-     esperar_mensaje(&msg_cliente_1, socket_cliente_1);
-     if (compare_print(&msg_cliente_1, 4u, "nickname jugador 1 recibido\n")){
-    	 mensaje nick_msg_1;
-    	 memcpy(&nick_msg_1, &msg_cliente_1, sizeof(msg_cliente_1));
-    	 nick_msg_1.message_type_id = 5u;
-    	 enviar_mensaje_payload(socket_cliente_2, &nick_msg_1);
-     }
-
-
-     //mensaje initial_pot;
-     mensaje initial_pot;
-     initial_pot.message_type_id = 6u;
-     int pot = 1000;
-     initial_pot.size = sizeof(pot);
-     memcpy(&initial_pot.payload, &pot,initial_pot.size);
-     enviar_mensaje_payload(socket_cliente_1, &initial_pot);
-     enviar_mensaje_payload(socket_cliente_2, &initial_pot);
-
-     mensaje game_start;
-     game_start.message_type_id = 7u;
-     game_start.size = 0u;
-     enviar_mensaje_payload(socket_cliente_1, &game_start);
-     enviar_mensaje_payload(socket_cliente_2, &game_start);
-
-     mensaje start_round;
-     start_round.message_type_id = 8u;
-     pot = 200;
-     start_round.size = sizeof(pot);
-     memcpy(&start_round.payload, &pot, start_round.size);
-     enviar_mensaje_payload(socket_cliente_1, &start_round);
-     enviar_mensaje_payload(socket_cliente_2, &start_round);
-
-     mensaje initial_bet;
-     initial_bet.message_type_id = 9u;
-     int bet = 10;
-     initial_bet.size = sizeof(bet);
-     memcpy(&initial_bet.payload, &bet, initial_bet.size);
-     enviar_mensaje_payload(socket_cliente_1, &initial_bet);
-     enviar_mensaje_payload(socket_cliente_2, &initial_bet);
-
-     mensaje first;
-     first.message_type_id = 11u;
-     unsigned char player = 1;
-     first.size = sizeof(player);
-     memcpy(&first.payload, &player, first.size);
-     enviar_mensaje_payload(socket_cliente_1, &first);
-     enviar_mensaje_payload(socket_cliente_2, &first);
-
-     mensaje get_bet;
-     get_bet.message_type_id = 14u;
-     unsigned char ids[3] = {1u, 2u, 3u};
-     get_bet.size = sizeof(ids);
-     memcpy(&get_bet.payload, &ids, get_bet.size);
-     enviar_mensaje_payload(socket_cliente_1, &get_bet);
-     enviar_mensaje_payload(socket_cliente_2, &get_bet);
-
-     esperar_mensaje(&msg_cliente_1, socket_cliente_1);
-     if (compare_print(&msg_cliente_1, 15u, "apuesta jugador 1 recibida\n")){
-    	 unsigned char apuesta_1;
-    	 memcpy(&apuesta_1, msg_cliente_1.payload, msg_cliente_1.size);
-    	 printf("%d\n", apuesta_1);
-     }
-
-     esperar_mensaje(&msg_cliente_2, socket_cliente_2);
-     if (compare_print(&msg_cliente_2, 15u, "apuesta jugador 2 recibida\n")){
-    	 unsigned char apuesta_2;
-    	 memcpy(&apuesta_2, msg_cliente_2.payload, msg_cliente_2.size);
-    	 printf("%d\n", apuesta_2);
-     }
-
-     mensaje send_5_cards;
-     send_5_cards.message_type_id = 10u;
-     unsigned char cartas[10] = {2u, HEART, 6u, CLOVR, 3u, DMOND, 7u, SPADE};
-     send_5_cards.size = sizeof(cartas);
-     memcpy(&send_5_cards.payload, &cartas, send_5_cards.size);
-     enviar_mensaje_payload(socket_cliente_1, &send_5_cards);
-     enviar_mensaje_payload(socket_cliente_2, &send_5_cards);
-     printf("llega");
+        if (j1->pot >= 10) {
+            enviar_mensaje(socket_cliente_1, INIT_BET, 0u, NULL_PAYLOAD);
+            j1->pot -= 10;
+        }
+        else {
+            enviar_mensaje(socket_cliente_1, WIN_LOSE, 1u, 2u);
+            enviar_mensaje(socket_cliente_2, WIN_LOSE, 1u, 1u);
+        }
+        if (j2->pot >= 10) {
+            enviar_mensaje(socket_cliente_2, INIT_BET, 0u, NULL_PAYLOAD);
+            j2->pot -= 10;
+        }
+        else {
+            enviar_mensaje(socket_cliente_1, WIN_LOSE, 1u, 1u);
+            enviar_mensaje(socket_cliente_2, WIN_LOSE, 1u, 2u);
+        }
 
 
-
-     close(socket_cliente_1);
-     close(socket_cliente_2);
-     close(id_socket_in);
-     return 0; 
+    }
+    close(socket_cliente_1);
+    close(socket_cliente_2);
+    close(id_socket_in);
+    free_memory(p);
+    return 0; 
+>>>>>>> 391fd2858c7bff61f8d0495f8cf4c83fceab8b47
 }

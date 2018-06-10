@@ -4,22 +4,19 @@ int pintas[4] = {HEART, DMOND, CLOVR, SPADE};
 int pintas_repr[4] = {HEART_REPR, DMOND_REPR, CLOVR_REPR, SPADE_REPR};
 int cartas[13] = {A,2};
 
-Partida* partida_init() {
+Partida* partida_init(Jugador* j1, Jugador* j2) {
     Partida* p = malloc(sizeof(Partida));
     p->dealer = 0;
-    p->turno = 0;
-    p->num_jugadores = 0;
     p->pozo = -1;
+    p->jugadores[0] = j1;
+    p->jugadores[1] = j2;
     return p;
 }
 
-Jugador* jugador_init(Partida* p, char* nombre) {
+Jugador* jugador_init(char* nombre) {
     Jugador* j = malloc(sizeof(Jugador));
-    j->pot = 1000;
+    j->pot = INITIAL_POT;
     j->nombre = nombre;
-    j->id = p->num_jugadores;
-    p->num_jugadores++;
-    // INICIALIZAR SOCKET
     return j;
 }
 
@@ -37,15 +34,13 @@ void apuesta_minima(Jugador* jugadores) {
 }
 
 // Reparte las 5 cartas iniciales
-void repartir_cartas(Jugador* jugadores) {
-    srand(12345);
-    int n = sizeof(jugadores) / sizeof(Jugador);
-    for (int i=0; i < n; i++) {
-        for (int k=0; k < 5; k++) {
-            jugadores[i].cartas[k][0] = (rand() % 13) + 1; // Numero
-            jugadores[i].cartas[k][1] = (rand() % 4) + 1;  // Pinta
-        }
-        // ENVIAR PAQUETE FIVE_CARDS A J.SOCKET
+void repartir_cartas(Jugador* j1, Jugador* j2) {
+    for (int k=0; k < 5; k++) {
+        j1->cartas[k][0] = (rand() % 13) + 1; // Numero
+        j1->cartas[k][1] = (rand() % 4) + 1;  // Pinta
+
+        j2->cartas[k][0] = (rand() % 13) + 1;
+        j2->cartas[k][1] = (rand() % 4) + 1;
     }
 }
 
@@ -64,23 +59,23 @@ void cambiar_cartas(int cartas[][2], int n, Jugador* j) {
 
 // Decide quien parte esta vuelta y le envia el msje
 void who_first(Partida* p) {
-    for (int i=0; i < p->num_jugadores; i++) {
+    for (int i=0; i < 2; i++) {
         if (i == p->dealer) {
             Jugador* j = p->jugadores[i];
             // ENVIAR MENSAJE A J
-            p->dealer = (p->dealer + 1) % p->num_jugadores;
+            p->dealer = (p->dealer + 1) % 2;
             return;
         }
     }
 }
 
 // Despues de mandar GET_BET y de recibir RET_BET
-bool manage_bet(Partida* p, int bet_code) {
+bool manage_bet(Partida* p, Jugador* j, int bet_code, int* status_code) {
     int bet = 0;
-    Jugador* j = p->jugadores[p->turno];
+    // Jugador* j = p->jugadores[p->turno];
     switch (bet_code) {
         case FOLD:
-            // ENVIAR OK_BET
+            *status_code = OK_BET;
             return true; // La vuelta esta lista
         case BET_0:
             bet = 0;
@@ -95,22 +90,22 @@ bool manage_bet(Partida* p, int bet_code) {
             bet = 500;
             break;
         default:
-            // ENVIAR ERROR_BET
+            *status_code = ERR_BET;
             return false; // La vuelta no esta lista
     }
     if (j->pot < bet) {
-        // ENVIAR ERROR_BET
+        *status_code = ERR_BET;
         return false;
     }
     if (j->pot >= bet) {
         if (p->pozo == bet) { // Iguala la apouesta
-            // ENVIAR OK_BET
+            *status_code = OK_BET;
             return true;
         }
         if (p->pozo < bet) { // Sube la apuesta
             p->pozo = bet;
-            // ENVIAR OK_BET A P->JUGADORES[P->TURNO]
-            p->turno = 1 - p->turno;
+            *status_code = OK_BET;
+            // p->turno = 1 - p->turno;
             // ENVIAR GET_BET A P->JUGADORES[P->TURNO]
             return false;
         }
@@ -188,8 +183,7 @@ void print_cartas(int cartas[][2], int n) {
 
 // Libera el heap
 void free_memory(Partida* p) {
-    for (int i=0; i < p->num_jugadores; i++) {
-        free(p->jugadores[i]);
-    }
+    free(p->jugadores[0]);
+    free(p->jugadores[1]);
     free(p);
 }

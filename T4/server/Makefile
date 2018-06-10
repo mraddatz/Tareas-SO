@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-c -Wall -I.
 LDFLAGS= -lm
-SOURCES=server.c
+SOURCES=poker.c server.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=server
 
